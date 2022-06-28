@@ -1,0 +1,23 @@
+#
+# Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+# This software is distributed under the terms of the MIT License.
+#
+
+uint32 EndOfTransmission = 2 ** 31 # this is end-of-transfer
+
+uint8 PriorityExceptional = 0
+uint8 PriorityImmediate = 1
+uint8 PriorityFast = 2
+uint8 PriorityHigh = 3
+uint8 PriorityNominal = 4
+uint8 PriorityLow = 5
+uint8 PrioritySlow = 6
+uint8 PriorityOptional = 7
+
+uint8 version           # =0 in this revision; ignore frame otherwise.
+uint8 priority          # Like in CAN: 0 -- highest priority, 7 -- lowest priority.
+void16                  # Set to zero when transmitting, ignore when receiving.
+uint32 frame_index_eot  # MSB is set if the current frame is the last frame of the transfer.
+uint64 transfer_id      # The transfer-ID never overflows.
+void64                  # This space may be used later for runtime type identification.
+@sealed

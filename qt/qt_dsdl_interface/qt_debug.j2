@@ -1,0 +1,29 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+
+{%- macro generate_qdebug(T, typename=None) -%}
+{%- if not typename -%}
+{% set typename = T | full_reference_name %}
+{%- endif -%}
+
+inline QDebug operator <<(QDebug stream, const {{ typename }}& o){
+{%- if T.inner_type is UnionType -%}
+{%- for field in T.fields_except_padding %}
+    if(o.is_{{ field | id }}()){
+        stream << "{{ field.name }}:" << *o.get_{{ field | id }}_if();
+        return stream;
+    }
+{%- endfor -%}
+    stream << "Wrong type in union type!";
+{%- else -%}
+{%- for field in T.fields_except_padding %}
+    stream << "{{ field.name }}:";
+    stream << o.{{ field | id }};
+{%- endfor -%}
+{%- endif -%}
+    return stream;
+}
+
+{%- endmacro -%}

@@ -1,0 +1,19 @@
+#
+# Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+# This software is distributed under the terms of the MIT License.
+#
+
+uint16 ROLE_MESSAGE=0
+uint16 ROLE_SERVICE_REQUEST=1
+uint16 ROLE_SERVICE_RESPONSE=2
+uint16 ROLE_SUBSCRIBE_MESSAGE=3
+uint16 ROLE_SUBSCRIBE_SERVICE_RESPONSE=4
+uint16 ROLE_START_BROADCAST=5
+
+
+uint16 role
+uint16 node_id
+# for service call describes destination node_id, for messages should be 0
+uint16 subject_id
+# service_id or subject_id for services and messages respectfully
+@extent 64 * 8

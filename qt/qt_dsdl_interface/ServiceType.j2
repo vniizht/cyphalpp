@@ -1,0 +1,18 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+
+{%- extends "base_.j2" %}
+{%- from "qt_debug.j2" import generate_qdebug -%}
+{%- block object -%}
+{{T.full_namespace | open_namespace}}
+{{ T | definition_begin }}
+{
+
+{{ generate_qdebug(T.request_type, T.request_type | short_reference_name) }}
+{{ generate_qdebug(T.response_type, T.response_type | short_reference_name) }}
+
+}{{ T | definition_end }}
+{{T.full_namespace | close_namespace}}
+{%- endblock -%}
