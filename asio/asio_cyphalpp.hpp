@@ -4,6 +4,7 @@
 //
 
 #include "cyphalpp.hpp"
+#include <tl/optional.hpp>
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -168,7 +169,7 @@ public:
     AsioTimer(io_service& service): TimerImpl(), service_(service){
     }
     virtual void startSingleShot(uint32_t millis, callback_t callback) override{
-        boost::asio::steady_timer::duration interval(millis);
+        boost::asio::steady_timer::duration interval(std::chrono::milliseconds{millis});
         timer_.emplace(service_, interval);
         timer_->async_wait([callback= std::move(callback)](const boost::system::error_code& error){
             if(error) return;
@@ -183,7 +184,7 @@ public:
 
 AsioTimer::~AsioTimer(){}
 
-auto asioTimer(io_service& service){
+TimerFactory asioTimer(io_service& service){
     return [&service]()-> std::unique_ptr<TimerImpl>{
         return std::make_unique<AsioTimer>(service);
     };

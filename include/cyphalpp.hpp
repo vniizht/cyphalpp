@@ -17,30 +17,6 @@ namespace cyphalpp{
 
 namespace errors{
 
-namespace detail{
-
-template <typename T0, typename REST>
-struct enum_list : REST
-{
-    int base() { return 100 + REST::base(); }
-    int unified(T0 value) { return int(value) + base(); }
-    int separated(int value, T0 dummy) { return value - base(); }  // plus assertions?
-    using REST::unified;
-    using REST::separated;
-};
-
-template <typename T0>
-struct enum_list<T0, void>
-{
-    int base() { return 0; }
-    int unified(T0 value) { return int(value); }
-    int separated(int value, T0 dummy) { return value; }
-};
-
-
-
-} // namespace detail
-
 enum class DataSpecifierConversion: uint8_t{
     WrongSubnet=0,
     WrongPort,
@@ -216,6 +192,10 @@ struct TimerImpl{
 };
 using TimerFactory = std::function<std::unique_ptr<TimerImpl>()>;
 
+
+template<uint16_t ni>
+constexpr uint16_t fixed_port_id(){ return ni;}
+
 struct CyphalUdp{
 private:
     struct Subscription{
@@ -252,8 +232,19 @@ public:
     template<typename Message, typename F>
     void subscribeMessage(F&& f){
         static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
+        subscribeMessage<Message>(
+            std::forward<F>(f),
+            []()->uint16_t {return Message::FixedPortId; }
+        );
+    }
+
+    template<typename Message, typename PortIdF, typename F>
+    void subscribeMessage(F&& f, PortIdF&& sidf){
+        static_assert(
+            std::is_convertible<decltype(sidf()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
         DataSpecifier ds{
-            DataSpecifier::Message, 0, Message::FixedPortId
+            DataSpecifier::Message, 0, sidf()
         };
         subscribe<Message>(
             ds, [f = std::forward<F>(f)](
@@ -332,8 +323,16 @@ public:
     template<typename Message>
     tl::expected<void, Error> sendMessage(const Message& msg, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
         static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
+        return sendMessage<Message>(msg, fixed_port_id<Message::FixedPortId>, priority);
+    }
+
+    template<typename Message, typename PortIdF>
+    tl::expected<void, Error> sendMessage(const Message& msg, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+        static_assert(
+            std::is_convertible<decltype(portIdf()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
         return sendMessage<Message>(sender_udp_.get(), TransferMetadata{
-            DataSpecifier{DataSpecifier::Message, 0, Message::FixedPortId
+            DataSpecifier{DataSpecifier::Message, 0, portIdf()
         },transfer_id_++, priority}, msg);
     }
     template<typename Message>
@@ -364,8 +363,10 @@ public:
         return {};
     }
 
-    template<typename Request, typename Response>
+    template<typename Service>
     class ServiceCaller{
+        using Request = typename Service::Request;
+        using Response = typename Service::Response;
         struct Call{
             uint64_t tid;
             std::unique_ptr<TimerImpl> timeout;
@@ -421,16 +422,22 @@ public:
         }
     };
 
-    template<typename Request, typename Response, typename F, typename Ef>
-    std::shared_ptr<ServiceCaller<Request, Response>> prepareServiceCalls(F&& f, Ef&& ef){
-        static_assert(Request::HasFixedPortID, "Request should have fixed port id!");
-        static_assert(Response::HasFixedPortID, "Response should have fixed port id!");
+    template<typename Service, typename F, typename Ef>
+    std::shared_ptr<ServiceCaller<Service>> prepareServiceCalls(F&& f, Ef&& ef){
+        using Response = typename Service::Response;
+        static_assert(Service::Request::HasFixedPortID, "Request should have fixed port id!");
+        static_assert(Service::Response::HasFixedPortID, "Response should have fixed port id!");
         auto senderUdp = socketFactory();
+        senderUdp->prepare(addr_, [](
+                const NetworkAddress&, const NetworkAddress&, const uint8_t*const, size_t
+        ) -> tl::expected<void, Error>{
+            return -errors::ParsePacket::HeaderWrongProtocolVersion;
+        });
 
-        std::shared_ptr<ServiceCaller<Request, Response>> ret{new ServiceCaller<Request, Response>(
+        std::shared_ptr<ServiceCaller<Service>> ret{new ServiceCaller<Service>(
             *this, std::move(senderUdp), timerFactory, TimerImpl::callback_t(std::forward<Ef>(ef)))};
         subscribe<Response>(
-            DataSpecifier{DataSpecifier::ServiceResponce, addr_.subject_or_node_id(), Response::FixedPortId}, 
+            DataSpecifier{DataSpecifier::ServiceResponce, addr_.subject_or_node_id(), Response::FixedPortId},
             [caller = ret, f = std::forward<F>(f)](
                     Subscription* const, const TransferMetadata& ds, const Response& msg
             ) -> tl::expected<void, Error>{
@@ -535,6 +542,7 @@ private:
         return cyphal_udp::Header_1_0::EXTENT_BYTES + msg.value();
     }
 };
+
 
 } // namespace cyphalpp
 #endif // ndef UAVCAN_ASYNC_UDP_HPP

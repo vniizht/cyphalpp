@@ -9,6 +9,7 @@ mkdir -p tl
 rm -rf tl/expected.hpp
 wget -O tl/expected.hpp https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp
 wget -O tl/COPYING      https://raw.githubusercontent.com/TartanLlama/expected/master/COPYING
+wget -O tl/optional.hpp https://raw.githubusercontent.com/TartanLlama/optional/master/include/tl/optional.hpp
 
 mkdir -p mpark
 rm -rf mpark/variant.hpp
@@ -20,4 +21,5 @@ sha256sum -c <<EOF
 c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566  mpark/LICENSE.md
 a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499  tl/COPYING
 12a643a033a2fe0ef51a108e16d099ee0f3ff47d67129bc5065314f1a276ede9  tl/expected.hpp
+14e07cdf283ea863f6515f125cc8098f72652286de2c3bb60cf97583eba2cae1  tl/optional.hpp
 EOF

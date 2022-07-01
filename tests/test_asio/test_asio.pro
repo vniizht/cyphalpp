@@ -15,6 +15,8 @@ isEmpty(BOOST_INCLUDE_DIR): {
     message("BOOST_INCLUDE_DIR is not set, assuming Boost can be found automatically in your system")
 }
 
+INCLUDEPATH *= $$PWD/../../include/
+INCLUDEPATH *= $$PWD/../../vendored/
 INCLUDEPATH *= $$PWD/../../asio/
 
 SOURCES += \

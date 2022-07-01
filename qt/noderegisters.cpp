@@ -16,11 +16,15 @@ Q_DECLARE_METATYPE(uavcan::_register::Value_1_0)
 namespace cyphalpp {
 namespace qt {
 
-using namespace uavcan::_register;
+using List = uavcan::_register::List::Service_1_0;
+using Access = uavcan::_register::Access::Service_1_0;
+using Name = uavcan::_register::Name_1_0;
+using Value = uavcan::_register::Value_1_0;
+
 struct RegisterPrivate{
-    Name_1_0 name;
-    Access::Response_1_0 value{};
-    RegisterPrivate(Name_1_0 n):name(n){}
+    Name name;
+    Access::Response value{};
+    RegisterPrivate(Name n):name(n){}
 };
 
 class NodeRegistersPrivate{
@@ -28,13 +32,13 @@ class NodeRegistersPrivate{
     NodeRegisters * const q_ptr;
     CyphalUdp &uc;
     uint16_t node_id;
-    std::shared_ptr<CyphalUdp::ServiceCaller<List::Request_1_0, List::Response_1_0 > > list{nullptr};
-    std::shared_ptr<CyphalUdp::ServiceCaller<Access::Request_1_0, Access::Response_1_0 > > access{nullptr};
+    std::shared_ptr<CyphalUdp::ServiceCaller<List > > list{nullptr};
+    std::shared_ptr<CyphalUdp::ServiceCaller<Access> > access{nullptr};
     std::vector<RegisterPrivate> values{};
     struct AccessRq{
         int index;
-        Access::Request_1_0 rq;
-        AccessRq(int i, Access::Request_1_0 r):index(i), rq(r){}
+        Access::Request rq;
+        AccessRq(int i, Access::Request r):index(i), rq(r){}
     };
     std::queue<AccessRq> accessQueue{};
     bool accessInProgress;
@@ -46,7 +50,7 @@ class NodeRegistersPrivate{
         QObject::connect(timer, &QTimer::timeout, [this](){
             restartAccesses();
         });
-        list = uc.prepareServiceCalls<List::Request_1_0, List::Response_1_0>([this](const TransferMetadata&, const List::Response_1_0& rsp){
+        list = uc.prepareServiceCalls<List>([this](const TransferMetadata&, const List::Response& rsp){
             if(rsp.name.name.empty()){
                 restartAccesses();
                 return;
@@ -57,12 +61,12 @@ class NodeRegistersPrivate{
             values.emplace_back(rsp.name);
             q->endInsertRows();
             {
-                Access::Request_1_0 rq{};
+                Access::Request rq{};
                 rq.name = rsp.name;
                 rq.value.set_empty();
                 accessQueue.emplace(newIndex, rq);
             }
-            List::Request_1_0 rq{};
+            List::Request rq{};
             rq.index = newIndex+1;
             list->call(node_id, rq);
         },
@@ -71,14 +75,14 @@ class NodeRegistersPrivate{
             auto timer = new QTimer(q);
             timer->setSingleShot(true);
             QObject::connect(timer, &QTimer::timeout, [this, timer]{
-                List::Request_1_0 rq{};
+                List::Request rq{};
                 rq.index = values.size();
                 list->call(node_id, rq);
                 timer->deleteLater();
             });
             timer->start(100);
         });
-        access = uc.prepareServiceCalls<Access::Request_1_0, Access::Response_1_0>([this](const TransferMetadata&, const Access::Response_1_0& rsp){
+        access = uc.prepareServiceCalls<Access>([this](const TransferMetadata&, const Access::Response& rsp){
             if(accessQueue.empty()) return;
             accessInProgress = false;
             auto i = accessQueue.front().index;
@@ -94,7 +98,7 @@ class NodeRegistersPrivate{
             accessInProgress = false;
             restartAccesses();
         });
-        List::Request_1_0 rq{};
+        List::Request rq{};
         rq.index = 0;
         list->call(node_id, rq);
         timer->start();
@@ -198,9 +202,9 @@ bool NodeRegisters::setData(const QModelIndex &index, const QVariant &v, int rol
     if(r >= d->values.size()) return false;
     auto& val = d->values.at(r);
     if(not val.value._mutable) return false;
-    Value_1_0 nv = val.value.value;
+    Value nv = val.value.value;
     if(not fromVariant(nv, v)) return false;
-    d->accessQueue.emplace(r, Access::Request_1_0{val.name, nv});
+    d->accessQueue.emplace(r, Access::Request{val.name, nv});
     d->restartAccesses();
     return true;
 }

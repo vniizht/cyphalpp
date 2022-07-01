@@ -19,6 +19,8 @@ namespace qt {
 
 using namespace uavcan::node;
 
+using GetInfo = GetInfo::Service_1_0;
+
 static const  EnumValue<Health_1_0> healthValues{
     {Health_1_0::NOMINAL, "NOMINAL", "The component is functioning properly (nominal)."},
     {Health_1_0::ADVISORY, "ADVISORY", "A critical parameter went out of range or the component encountered a minor failure that does not prevent the subsystem from performing any of its real-time functions."},
@@ -37,7 +39,7 @@ static QString to_string(const Version_1_0& v){ return QStringLiteral("%1.%2").a
 
 struct NodeData{
     std::optional<uavcan::node::Heartbeat_1_0> heartbeat{};
-    uavcan::node::GetInfo::Response_1_0 info{};
+    GetInfo::Response info{};
     QPointer<QTimer> timeout{nullptr};
     bool dataFetching{false};
     bool dataFetched{false};
@@ -224,8 +226,8 @@ NodesHealthModel::NodesHealthModel(CyphalUdp &uc, QObject *parent)
             ++c;
         }
     };
-    auto getData = uc.prepareServiceCalls<GetInfo::Request_1_0, GetInfo::Response_1_0>(
-        [this, updateRow](const TransferMetadata& tm, const GetInfo::Response_1_0& rsp){
+    auto getData = uc.prepareServiceCalls<GetInfo>(
+        [this, updateRow](const TransferMetadata& tm, const GetInfo::Response& rsp){
             Q_D(NodesHealthModel);
             auto node = tm.data.node_id;
             auto nodePos = std::find(d->nodes.begin(), d->nodes.end(), node);
@@ -246,7 +248,7 @@ NodesHealthModel::NodesHealthModel(CyphalUdp &uc, QObject *parent)
             beginInsertRows(QModelIndex{}, d->nodes.size(), d->nodes.size());
             d->nodes.emplace_back(node);
             nodePos = --d->nodes.end();
-            d->nodeData.emplace(node, NodeData{hb, GetInfo::Response_1_0{}});
+            d->nodeData.emplace(node, NodeData{hb, GetInfo::Response{}});
             endInsertRows();
         }else{
             auto dataPos = d->nodeData.find(node);
@@ -258,7 +260,7 @@ NodesHealthModel::NodesHealthModel(CyphalUdp &uc, QObject *parent)
         if(not nd.dataFetched){
             if(not nd.dataFetching){
                 nd.dataFetching = true;
-                (*getData)(node, GetInfo::Request_1_0{});
+                (*getData)(node, GetInfo::Request{});
             }
         }
         if(not nd.timeout){
