@@ -158,3 +158,42 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithFixedId, TwoNodes)
     BOOST_TEST( callback_called );
     BOOST_TEST( answered );
 }
+
+BOOST_FIXTURE_TEST_CASE( TestServiceWithRandomId, TwoNodes)
+{
+    bool callback_called{false};
+    bool answered{false};
+
+    const ExecuteCommand::Request sreq{
+        .command=ExecuteCommand::Request::COMMAND_STORE_PERSISTENT_STATES
+    };
+    const ExecuteCommand::Response ans{
+        .status = ExecuteCommand::Response::STATUS_INTERNAL_ERROR
+    };
+    Node<2>::node.subscribeServiceRequest<ExecuteCommand>([this, &callback_called, &sreq, &ans](const TransferMetadata& tm, const ExecuteCommand::Request& req){
+        if(tm.data.node_id == 1 and req == sreq){
+            callback_called = true;
+        }else{
+            service.stop();
+        }
+        return ans;
+    });
+
+
+    auto service_caller = Node<1>::node.prepareServiceCalls<ExecuteCommand>([this, &answered, &ans](const TransferMetadata& tm, const ExecuteCommand::Response& rsp){
+        if(tm.data.node_id == 2 and ans == rsp){
+            answered = true;
+            service.stop();
+        }
+    }, [this](){
+        std::clog << "Error!" << std::endl;
+        service.stop();}
+    );
+
+    BOOST_TEST( bool{service_caller->call(2, sreq)} );
+
+    service.run_for(5000ms);
+
+    BOOST_TEST( callback_called );
+    BOOST_TEST( answered );
+}

@@ -196,6 +196,18 @@ using TimerFactory = std::function<std::unique_ptr<TimerImpl>()>;
 template<uint16_t ni>
 constexpr uint16_t fixed_port_id(){ return ni;}
 
+/**
+ * @brief The CyphalUdp struct is a network node. It is used to send and recieve Cyphal messages over Cyphal/UDP protocol
+ *
+ * To use it, you should instantiate it and set base network address to it:
+ *
+ * ```cpp
+ * cyphalpp::CyphalUdp node(socketsImpl, timersImpl);
+ * node.setAddr(someAddr);
+ * ```
+ *
+ *
+ */
 struct CyphalUdp{
 private:
     struct Subscription{
@@ -216,10 +228,20 @@ private:
     std::uint64_t transfer_id_{0};
     bool loopback_enabled{false};
 public:
+    /**
+     * @brief CyphalUdp constructor. It creates a node instance
+     * @param sFactory - should be a function, creating a new UDP socket instance
+     * @param tFactory - should be a function, creating a new timer
+     * @param loopback - specifies, whether this node should receive messages from itself
+     */
     CyphalUdp(SocketFactory sFactory, TimerFactory tFactory, bool loopback = false):
         socketFactory(std::move(sFactory)), timerFactory(std::move(tFactory)), loopback_enabled(loopback){
         sender_udp_ = socketFactory();
     }
+    /**
+     * @brief setAddr set base address `addr` for this node
+     * @param addr - address of node
+     */
     void setAddr(const MessageAddr& addr){
         addr_ = addr;
         sender_udp_->prepare(addr_, [](
@@ -228,7 +250,12 @@ public:
             return -errors::ParsePacket::HeaderWrongProtocolVersion;
         });
     }
-    
+    /**
+     * @brief subscribeMessage - subscribes to a broadcast message Message **with** fixed port id
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
+     * @tparam F - functor class to call when Message is recieved.
+     * @param f - functor instance to call when Message is recieved.
+     */
     template<typename Message, typename F>
     void subscribeMessage(F&& f){
         static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
@@ -237,14 +264,21 @@ public:
             []()->uint16_t {return Message::FixedPortId; }
         );
     }
-
+    /**
+     * @brief subscribeMessage - subscribes to a broadcast message Message **without** a fixed port id
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::si::unit::length::Scalar_1_0`, for example
+     * @tparam PortIdF - functor class to call to determine port id
+     * @tparam F - functor class to call when Message is recieved.
+     * @param portIdF - functor instance to call to determine port id
+     * @param f - functor instance to call when Message is recieved.
+     */
     template<typename Message, typename PortIdF, typename F>
-    void subscribeMessage(F&& f, PortIdF&& sidf){
+    void subscribeMessage(F&& f, PortIdF&& portIdF){
         static_assert(
-            std::is_convertible<decltype(sidf()), uint16_t>::value,
+            std::is_convertible<decltype(portIdF()), uint16_t>::value,
             "Port ID callback should return uint16_t");
         DataSpecifier ds{
-            DataSpecifier::Message, 0, sidf()
+            DataSpecifier::Message, 0, portIdF()
         };
         subscribe<Message>(
             ds, [f = std::forward<F>(f)](
@@ -254,6 +288,10 @@ public:
             });
     }
 
+    /**
+     * @brief subscribeServiceRequest - creates a server for a service Service with fixed port id
+     * @param f
+     */
     template<typename Service, typename F>
     void subscribeServiceRequest(F&& f){
         using Request = typename Service::Request;
@@ -320,6 +358,12 @@ public:
         return subs.back().get();
     }
 
+    /**
+     * @brief sendMessage - publishes message Message with fixed port id
+     * @param msg - instance of messagw,
+     * @param priority
+     * @return
+     */
     template<typename Message>
     tl::expected<void, Error> sendMessage(const Message& msg, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
         static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
