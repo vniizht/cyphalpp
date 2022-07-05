@@ -1,6 +1,6 @@
 # cyphalpp
 
-This is a header-only Cyphal/UDP implementation for C++14.
+This is a header-only Cyphal/UDP implementation for C++14. See [reference](https://vniizht.github.io/cyphalpp/).
 
 
 It is written in a implementation-agnostic asyncronous way - you would need to provide a backend implementation for an asynchronous socket and timer.
@@ -28,25 +28,41 @@ A very basic example is as follows:
 ```cpp
 #include "cyphalpp.hpp"
 #include // your target implementation
-#include <uavcan/node/Heartbeat_1_0.hpp> // transpiled DSDL
+
+// transpiled DSDL
+#include <uavcan/node/Heartbeat_1_0.hpp>
+#include <uavcan/node/ExecuteCommand_1_1.hpp>
 #include <uavcan/si/sample/length/Scalar.1.0.hpp>
 
 int main(){
     // initialize target async framework
     cyphalpp::CyphalUdp cy(/*target socket factory*/, /*target timer factory*/);
     cy.setAddr(cyphalpp::MessageAddr(/* this should be IPv4 uint32_t local address in host byte order*/));
+
+    // subscribe to a fixed port-id message
     cy.subscribe<uavcan::node::Heartbeat_1_0>([](const cyphalpp::TransferMetadata& md, const uavcan::node::Heartbeat_1_0& hb){
        // do whatever with hb object.
     });
 
-    subscribeMessage<uavcan::si::sample::length::Scalar_1_0>(
+    // subscribe to uavcan.si.sample.length.Scalar.1.0 (non-fixed port-id) on port-id 100
+    cy.subscribeMessage<uavcan::si::sample::length::Scalar_1_0>(
         [](
                 const TransferMetadata& tm, const uavcan::si::sample::length::Scalar_1_0& sample
         ){
             // do whatever with sample object
         },
         fixed_port_id<100>);
-    // subscribe to uavcan.si.sample.length.Scalar.1.0 on port-id 100
+
+    // listen to calls of a fixed port-id service
+    using ExecuteCommand = uavcan::node::ExecuteCommand::Service_1_1;
+    cy.subscribeServiceRequest<ExecuteCommand> ([](const cyphalpp::TransferMetadata& tm, const ExecuteCommand::Request& req) -> ExecuteCommand::Response {
+       // process request req
+       // ....
+
+       // return response object
+       ExecuteCommand::Response resp{};
+       return resp;
+    });
 
     // start and enter target event loop
     return 0;

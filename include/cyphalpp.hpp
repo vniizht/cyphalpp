@@ -360,9 +360,10 @@ public:
 
     /**
      * @brief sendMessage - publishes message Message with fixed port id
-     * @param msg - instance of messagw,
-     * @param priority
-     * @return
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
+     * @param msg - message to send
+     * @param priority - priority of this message
+     * @return void if e
      */
     template<typename Message>
     tl::expected<void, Error> sendMessage(const Message& msg, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
@@ -370,6 +371,16 @@ public:
         return sendMessage<Message>(msg, fixed_port_id<Message::FixedPortId>, priority);
     }
 
+    /**
+     * @brief sendMessage - publishes message Message with random port id
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::si::unit::length::Scalar_1_0`, for example
+     * @tparam PortIdF - functor class to call to determine port id
+     * @tparam F - functor class to call when Message is recieved.
+     * @param msg - message to send
+     * @param portIdf - functor instance to call to determine port id
+     * @param priority - priority of this message
+     * @return
+     */
     template<typename Message, typename PortIdF>
     tl::expected<void, Error> sendMessage(const Message& msg, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
         static_assert(
@@ -379,6 +390,7 @@ public:
             DataSpecifier{DataSpecifier::Message, 0, portIdf()
         },transfer_id_++, priority}, msg);
     }
+
     template<typename Message>
     tl::expected<void, Error> sendMessage(UdpSocketImpl* sock, const TransferMetadata& ds, const Message& msg){
         auto prepared = prepareFrame<Message>(ds, msg);
@@ -438,9 +450,20 @@ public:
             return ret;
         }
     public:
+        /**
+         * @brief call - same as operator()
+         */
         auto call(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
             return operator()(node_id, msg, timeout_ms, priority);
         }
+        /**
+         * @brief operator () - calls service on node_id with request msg
+         * @param node_id - id of the target node
+         * @param msg - message object to send
+         * @param timeout_ms - how much time to wait before request is considered timed out
+         * @param priority - priority of the sent message
+         * @return result of the message sending process. either void - ok or with cyphalpp::Error on error
+         */
         tl::expected<void, Error> operator()(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
             auto tid = self.transfer_id_++;
             auto ret = self.sendMessage<Request>(senderUdp.get(), TransferMetadata{
@@ -466,6 +489,12 @@ public:
         }
     };
 
+    /**
+     * @brief prepareServiceCalls
+     * @param f
+     * @param ef
+     * @return
+     */
     template<typename Service, typename F, typename Ef>
     std::shared_ptr<ServiceCaller<Service>> prepareServiceCalls(F&& f, Ef&& ef){
         using Response = typename Service::Response;

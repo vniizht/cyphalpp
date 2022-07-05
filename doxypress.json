@@ -326,7 +326,7 @@
         "html-footer": "",
         "html-header": "",
         "html-index-num-entries": 100,
-        "html-output": "html",
+        "html-output": ".",
         "html-search": false,
         "html-stylesheets": [
             ""
