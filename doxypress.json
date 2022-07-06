@@ -191,15 +191,15 @@
         "example-patterns": [
             "*"
         ],
-        "example-recursive": false,
+        "example-recursive": true,
         "example-source": [
-            ""
+            "examples"
         ],
         "exclude-files": [
             "vendored"
         ],
         "exclude-patterns": [
-            ""
+            "*build_*"
         ],
         "exclude-symbols": [
             "*Private",
@@ -314,7 +314,7 @@
         "formula-macrofile": "",
         "formula-transparent": true,
         "generate-html": true,
-        "generate-treeview": false,
+        "generate-treeview": true,
         "ghostscript": "",
         "html-colorstyle-gamma": 80,
         "html-colorstyle-hue": 220,

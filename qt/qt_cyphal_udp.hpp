@@ -15,6 +15,13 @@ QDebug operator<<(QDebug ret,const nunavut::support::Error& c);
 QDebug operator<<(QDebug ret,const cyphalpp::errors::ParsePacket& c);
 
 namespace qt{
+/**
+ * @brief qCyphalUdpSocket
+ * @return
+ *
+ * \example basic_qt_publisher/basic_qt_publisher.pro
+ * \example basic_qt_publisher/main.cpp
+ */
 auto qCyphalUdpSocket() -> std::unique_ptr<cyphalpp::UdpSocketImpl>;
 auto qCyphalTimer() -> std::unique_ptr<cyphalpp::TimerImpl>;
 } // namespace qt
