@@ -89,14 +89,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9f640d2ed1c2295a6d3dad41f064be72"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9f640d2ed1c2295a6d3dad41f064be72">subscribeServiceRequest</a> (F &amp;&amp;f)</td></tr>
 <tr class="memdesc:a9f640d2ed1c2295a6d3dad41f064be72"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9f640d2ed1c2295a6d3dad41f064be72" title="subscribeServiceRequest - creates a server for a service Service with fixed port id ">subscribeServiceRequest</a> - creates a server for a service Service with fixed port id  <a href="#a9f640d2ed1c2295a6d3dad41f064be72">More...</a><br /></td></tr>
 <tr class="separator:a9f640d2ed1c2295a6d3dad41f064be72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20c031dab624d551ca697b410bd5d45f"><td class="memTemplParams" colspan="2"><a class="anchor" id="a20c031dab624d551ca697b410bd5d45f"></a>
-template&lt;typename Message , typename F &gt; </td></tr>
-<tr class="memitem:a20c031dab624d551ca697b410bd5d45f"><td class="memTemplItemLeft" align="right" valign="top">Subscription *&#160;</td><td class="memTemplItemRight" valign="bottom"><b>subscribe</b> (<a class="el" href="structcyphalpp_1_1DataSpecifier.html">DataSpecifier</a> ds, F &amp;&amp;f)</td></tr>
-<tr class="separator:a20c031dab624d551ca697b410bd5d45f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a976afb8bcd69c0f5de428684ba7dc494"><td class="memTemplParams" colspan="2"><a class="anchor" id="a976afb8bcd69c0f5de428684ba7dc494"></a>
-template&lt;typename F &gt; </td></tr>
-<tr class="memitem:a976afb8bcd69c0f5de428684ba7dc494"><td class="memTemplItemLeft" align="right" valign="top">Subscription *&#160;</td><td class="memTemplItemRight" valign="bottom"><b>subscribeRaw</b> (<a class="el" href="structcyphalpp_1_1DataSpecifier.html">DataSpecifier</a> ds, F &amp;&amp;f)</td></tr>
-<tr class="separator:a976afb8bcd69c0f5de428684ba7dc494"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc62932ef34c6dd234a307704a80aaef"><td class="memTemplParams" colspan="2">template&lt;typename Service , typename PortIdF , typename F &gt; </td></tr>
+<tr class="memitem:acc62932ef34c6dd234a307704a80aaef"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#acc62932ef34c6dd234a307704a80aaef">subscribeServiceRequest</a> (PortIdF &amp;&amp;portIdF, F &amp;&amp;f)</td></tr>
+<tr class="memdesc:acc62932ef34c6dd234a307704a80aaef"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9f640d2ed1c2295a6d3dad41f064be72" title="subscribeServiceRequest - creates a server for a service Service with fixed port id ">subscribeServiceRequest</a> - creates a server for a service Service with dynamic port id  <a href="#acc62932ef34c6dd234a307704a80aaef">More...</a><br /></td></tr>
+<tr class="separator:acc62932ef34c6dd234a307704a80aaef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99b89d35c9289eccdd359cf0f3cb0eb2"><td class="memTemplParams" colspan="2">template&lt;typename Message &gt; </td></tr>
 <tr class="memitem:a99b89d35c9289eccdd359cf0f3cb0eb2"><td class="memTemplItemLeft" align="right" valign="top">tl::expected&lt; void, Error &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a99b89d35c9289eccdd359cf0f3cb0eb2">sendMessage</a> (const Message &amp;msg, uint8_t priority=cyphal_udp::Header_1_0::PriorityNominal)</td></tr>
 <tr class="memdesc:a99b89d35c9289eccdd359cf0f3cb0eb2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a99b89d35c9289eccdd359cf0f3cb0eb2" title="sendMessage - publishes message Message with fixed port id ">sendMessage</a> - publishes message Message with fixed port id  <a href="#a99b89d35c9289eccdd359cf0f3cb0eb2">More...</a><br /></td></tr>
@@ -105,16 +101,9 @@ template&lt;typename F &gt; </td></tr>
 <tr class="memitem:aa46d76062a07c6bcfc6e2760e839c3dc"><td class="memTemplItemLeft" align="right" valign="top">tl::expected&lt; void, Error &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#aa46d76062a07c6bcfc6e2760e839c3dc">sendMessage</a> (const Message &amp;msg, PortIdF &amp;&amp;portIdf, uint8_t priority=cyphal_udp::Header_1_0::PriorityNominal)</td></tr>
 <tr class="memdesc:aa46d76062a07c6bcfc6e2760e839c3dc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a99b89d35c9289eccdd359cf0f3cb0eb2" title="sendMessage - publishes message Message with fixed port id ">sendMessage</a> - publishes message Message with random port id  <a href="#aa46d76062a07c6bcfc6e2760e839c3dc">More...</a><br /></td></tr>
 <tr class="separator:aa46d76062a07c6bcfc6e2760e839c3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa06e82e5562e9be43d91babc2a31176c"><td class="memTemplParams" colspan="2"><a class="anchor" id="aa06e82e5562e9be43d91babc2a31176c"></a>
-template&lt;typename Message &gt; </td></tr>
-<tr class="memitem:aa06e82e5562e9be43d91babc2a31176c"><td class="memTemplItemLeft" align="right" valign="top">tl::expected&lt; void, Error &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>sendMessage</b> (<a class="el" href="structcyphalpp_1_1UdpSocketImpl.html">UdpSocketImpl</a> *sock, const <a class="el" href="structcyphalpp_1_1TransferMetadata.html">TransferMetadata</a> &amp;ds, const Message &amp;msg)</td></tr>
-<tr class="separator:aa06e82e5562e9be43d91babc2a31176c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b07ee3b8b8982cc13afd075a2526ac4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b07ee3b8b8982cc13afd075a2526ac4"></a>
-tl::expected&lt; void, Error &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessage</b> (<a class="el" href="structcyphalpp_1_1UdpSocketImpl.html">UdpSocketImpl</a> *sock, const <a class="el" href="structcyphalpp_1_1TransferMetadata.html">TransferMetadata</a> &amp;ds, const uint8_t *const data, size_t size)</td></tr>
-<tr class="separator:a7b07ee3b8b8982cc13afd075a2526ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9272db93e3d560bd0973018fdea2bed2"><td class="memTemplParams" colspan="2">template&lt;typename Service , typename F , typename Ef &gt; </td></tr>
 <tr class="memitem:a9272db93e3d560bd0973018fdea2bed2"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classcyphalpp_1_1CyphalUdp_1_1ServiceCaller.html">ServiceCaller</a>&lt; Service &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9272db93e3d560bd0973018fdea2bed2">prepareServiceCalls</a> (F &amp;&amp;f, Ef &amp;&amp;ef)</td></tr>
-<tr class="memdesc:a9272db93e3d560bd0973018fdea2bed2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9272db93e3d560bd0973018fdea2bed2" title="prepareServiceCalls ">prepareServiceCalls</a>  <a href="#a9272db93e3d560bd0973018fdea2bed2">More...</a><br /></td></tr>
+<tr class="memdesc:a9272db93e3d560bd0973018fdea2bed2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9272db93e3d560bd0973018fdea2bed2" title="prepareServiceCalls creates a callable object to make a call to a service the result of a call will ...">prepareServiceCalls</a> creates a callable object to make a call to a service the result of a call will be delivered to callback f or to ef in case of a error  <a href="#a9272db93e3d560bd0973018fdea2bed2">More...</a><br /></td></tr>
 <tr class="separator:a9272db93e3d560bd0973018fdea2bed2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -209,15 +198,23 @@ template&lt;typename Service , typename F , typename Ef &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9272db93e3d560bd0973018fdea2bed2" title="prepareServiceCalls ">prepareServiceCalls</a> </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">f</td><td></td></tr>
-    <tr><td class="paramname">ef</td><td></td></tr>
+<p><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9272db93e3d560bd0973018fdea2bed2" title="prepareServiceCalls creates a callable object to make a call to a service the result of a call will ...">prepareServiceCalls</a> creates a callable object to make a call to a service the result of a call will be delivered to callback f or to ef in case of a error </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Service</td><td>- service class generated by Nunavut from DSDL </td></tr>
+    <tr><td class="paramname">F</td><td>- functor class to be called with successful call </td></tr>
+    <tr><td class="paramname">Ef</td><td>- functor class to be called on error </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">f</td><td>- functor object to be called with successful call </td></tr>
+    <tr><td class="paramname">ef</td><td>- functor object to be called on error </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>service caller to use to call this service </dd></dl>
 
 </div>
 </div>
@@ -485,9 +482,69 @@ template&lt;typename Service , typename F &gt; </div>
 </div><div class="memdoc">
 
 <p><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9f640d2ed1c2295a6d3dad41f064be72" title="subscribeServiceRequest - creates a server for a service Service with fixed port id ">subscribeServiceRequest</a> - creates a server for a service Service with fixed port id </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Service</td><td>- one of Nunavut-generated service classes <code>uavcan::node::ExecuteCommand_1_0</code>, for example </td></tr>
+    <tr><td class="paramname">F</td><td>- functor class to call when Service::Request is recieved. It should return Service::Response. </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">f</td><td></td></tr>
+    <tr><td class="paramname">f</td><td>- functor instance to call when Service::Request is recieved. It should return Service::Response. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="acc62932ef34c6dd234a307704a80aaef"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Service , typename PortIdF , typename F &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cyphalpp::CyphalUdp::subscribeServiceRequest </td>
+          <td>(</td>
+          <td class="paramtype">PortIdF &amp;&amp;&#160;</td>
+          <td class="paramname"><em>portIdF</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">F &amp;&amp;&#160;</td>
+          <td class="paramname"><em>f</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structcyphalpp_1_1CyphalUdp.html#a9f640d2ed1c2295a6d3dad41f064be72" title="subscribeServiceRequest - creates a server for a service Service with fixed port id ">subscribeServiceRequest</a> - creates a server for a service Service with dynamic port id </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Service</td><td>- one of Nunavut-generated service classes <code>uavcan::node::ExecuteCommand_1_0</code>, for example </td></tr>
+    <tr><td class="paramname">PortIdF</td><td>- functor class to call to determine port id of the service </td></tr>
+    <tr><td class="paramname">F</td><td>- functor class to call when Service::Request is recieved. It should return Service::Response. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">portIdF</td><td>- functor instance to call to determine port id of the service </td></tr>
+    <tr><td class="paramname">f</td><td>- functor instance to call when Service::Request is recieved. It should return Service::Response. </td></tr>
   </table>
   </dd>
 </dl>
@@ -500,7 +557,7 @@ template&lt;typename Service , typename F &gt; </div>
 </div><!-- contents -->
 <!-- Generated by DoxyPress 1.4.2 -->
 <hr class="footer"/><address class="footer"><small>
-Generated on вт июл. 5 2022 18:03:20 for cyphalpp &nbsp; by &#160;<a href="https://www.copperspice.com/documentation-doxypress.html">
+Generated on ср июл. 6 2022 15:58:16 for cyphalpp &nbsp; by &#160;<a href="https://www.copperspice.com/documentation-doxypress.html">
 <img class="footer" src="doxypress.png" alt="DoxyPress"/></a> 1.4.2
 </small></address>
 </body>
