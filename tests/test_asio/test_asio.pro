@@ -19,6 +19,10 @@ INCLUDEPATH *= $$PWD/../../include/
 INCLUDEPATH *= $$PWD/../../vendored/
 INCLUDEPATH *= $$PWD/../../asio/
 
+HEADERS += \
+    $$PWD/../../include/cyphalpp.hpp \
+    $$PWD/../../asio/asio_cyphal.hpp
+
 SOURCES += \
     main.cpp
 

@@ -56,7 +56,7 @@ static inline tl::unexpected<Error> operator-(errors::ServiceCall d){
 }
 
 /**
- * MessageAddr - a class representing IPv4 address for UAVCAN/UDP
+ * MessageAddr - a class representing IPv4 address for Cyphal/UDP
  */
 struct MessageAddr{
 public:
@@ -73,7 +73,9 @@ public:
     }
     /// constructs MessageAddr with 32-bit IPv4 address in __HOST__ byte order!
     MessageAddr(uint32_t addr) : value_(addr) { }
+    /// returns prefix
     constexpr uint32_t prefix_9bit() const{ return (value_ >> 23) & 0x1FF; }
+    /// returns subnet id
     constexpr uint8_t subnet_id() const {   return static_cast<uint8_t>((value_ >> 16) & 0x7FU); }
     /// for multicast addresses returns subject_id, for unicast adresses returns node_id
     constexpr uint16_t subject_or_node_id() const { return static_cast<uint16_t>(value_ & 0x1FFFU); }
@@ -84,7 +86,7 @@ public:
 private:
     uint32_t value_;
 };
-
+/// This is a max UDP message transfer unit
 constexpr static size_t UDP_MAX_MTU=1200;
 constexpr static uint16_t MULTICAST_PORT = 16383;
 constexpr static uint16_t UNICAST_BASE_PORT = MULTICAST_PORT + 1;
@@ -92,10 +94,12 @@ constexpr static uint16_t MAX_SERVICE_SUBJECT_ID = 8191;
 
 
 
+
+struct NetworkAddress;
+
 /**
  * Describes data transfer - to/from which node it goes
  */
-struct NetworkAddress;
 struct DataSpecifier{
     enum Role: uint32_t{
         Message=cyphal_udp::UnicastBridgeHeader_1_0::ROLE_MESSAGE,
@@ -120,6 +124,7 @@ struct DataSpecifier{
 struct NetworkAddress{
     MessageAddr addr;
     uint16_t port;
+
     static NetworkAddress from_data_specifier(const MessageAddr& currentdAddr, const DataSpecifier& ds);
 };
 
@@ -172,7 +177,7 @@ struct TransferMetadata{
 using packetRecievedHandler = std::function<tl::expected<void, Error>(const NetworkAddress& source, const NetworkAddress& dest, const uint8_t*const data, size_t size)>;
 
 /**
- * This is a generic udp socket interface for this library. You need to it for your environment.
+ * This is an abstract udp socket interface. You need to implement it for your environment.
  */
 struct UdpSocketImpl{
     virtual void prepare(const MessageAddr& base_addr, packetRecievedHandler handler)=0;
@@ -184,6 +189,9 @@ struct UdpSocketImpl{
 };
 using SocketFactory = std::function<std::unique_ptr<UdpSocketImpl>()>;
 
+/**
+ * This is an abstract timer interface. You need to implement it for your environment.
+ */
 struct TimerImpl{
     using callback_t = std::function<void()>;
     virtual void startSingleShot(uint32_t millis, callback_t callback) = 0;
@@ -290,15 +298,33 @@ public:
 
     /**
      * @brief subscribeServiceRequest - creates a server for a service Service with fixed port id
-     * @param f
+     * @tparam Service - one of Nunavut-generated service classes `uavcan::node::ExecuteCommand_1_0`, for example
+     * @tparam F - functor class to call when Service::Request is recieved. It should return Service::Response.
+     * @param f - functor instance to call when Service::Request is recieved. It should return Service::Response.
      */
     template<typename Service, typename F>
     void subscribeServiceRequest(F&& f){
+        static_assert(Service::Request::HasFixedPortID, "Message should have fixed port id!");
+        subscribeServiceRequest<Service>(fixed_port_id<Service::Request::FixedPortId>, std::forward<F>(f));
+    }
+
+    /**
+     * @brief subscribeServiceRequest - creates a server for a service Service with dynamic port id
+     * @tparam Service - one of Nunavut-generated service classes `uavcan::node::ExecuteCommand_1_0`, for example
+     * @tparam PortIdF - functor class to call to determine port id of the service
+     * @tparam F - functor class to call when Service::Request is recieved. It should return Service::Response.
+     * @param portIdF - functor instance to call to determine port id of the service
+     * @param f - functor instance to call when Service::Request is recieved. It should return Service::Response.
+     */
+    template<typename Service, typename PortIdF, typename F>
+    void subscribeServiceRequest(PortIdF&& portIdF, F&& f){
         using Request = typename Service::Request;
         using Response = typename Service::Response;
-        static_assert(Request::HasFixedPortID, "Message should have fixed port id!");
+        static_assert(
+            std::is_convertible<decltype(portIdF()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
         DataSpecifier ds{
-            DataSpecifier::ServiceRequest, addr_.subject_or_node_id(), Request::FixedPortId
+            DataSpecifier::ServiceRequest, addr_.subject_or_node_id(), portIdF()
         };
         subscribe<Request>(
             ds, [this, f = std::forward<F>(f)](
@@ -312,13 +338,156 @@ public:
                     }, resp);
                 return {};
         });
-
     }
 
+    /**
+     * @brief sendMessage - publishes message Message with fixed port id
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
+     * @param msg - message to send
+     * @param priority - priority of this message
+     * @return void if e
+     */
+    template<typename Message>
+    tl::expected<void, Error> sendMessage(const Message& msg, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+        static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
+        return sendMessage<Message>(msg, fixed_port_id<Message::FixedPortId>, priority);
+    }
+
+    /**
+     * @brief sendMessage - publishes message Message with random port id
+     * @tparam Message - one of Nunavut-generated message classes `uavcan::si::unit::length::Scalar_1_0`, for example
+     * @tparam PortIdF - functor class to call to determine port id
+     * @tparam F - functor class to call when Message is recieved.
+     * @param msg - message to send
+     * @param portIdf - functor instance to call to determine port id
+     * @param priority - priority of this message
+     * @return
+     */
+    template<typename Message, typename PortIdF>
+    tl::expected<void, Error> sendMessage(const Message& msg, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+        static_assert(
+            std::is_convertible<decltype(portIdf()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
+        return sendMessage<Message>(sender_udp_.get(), TransferMetadata{
+            DataSpecifier{DataSpecifier::Message, 0, portIdf()
+        },transfer_id_++, priority}, msg);
+    }
+
+
+
+    template<typename Service>
+    class ServiceCaller{
+        using Request = typename Service::Request;
+        using Response = typename Service::Response;
+        struct Call{
+            uint64_t tid;
+            std::unique_ptr<TimerImpl> timeout;
+        };
+
+        CyphalUdp& self;
+        std::unique_ptr<UdpSocketImpl> senderUdp;
+        TimerFactory timerFactory;
+        TimerImpl::callback_t errorCallback;
+        std::vector<Call > calls;
+
+        friend struct CyphalUdp;
+
+        template<typename F>
+        ServiceCaller(
+            CyphalUdp& _self, 
+            F&& f,
+            TimerImpl::callback_t _errorCallback
+        )
+        :self(_self),senderUdp(self.socketFactory()),timerFactory(self.timerFactory), errorCallback(std::move(_errorCallback)){
+            senderUdp->prepare(self.addr_, [](
+                    const NetworkAddress&, const NetworkAddress&, const uint8_t*const, size_t
+            ) -> tl::expected<void, Error>{
+                return -errors::ParsePacket::HeaderWrongProtocolVersion;
+            });
+            self.subscribe<Response>(
+                DataSpecifier{DataSpecifier::ServiceResponce, self.addr_.subject_or_node_id(), Response::FixedPortId},
+                [this, f = std::forward<F>(f)](
+                        Subscription* const, const TransferMetadata& ds, const Response& msg
+                ) -> tl::expected<void, Error>{
+                    auto err = serviceResponce(ds);
+                    if(err){
+                        f(ds, msg);
+                        return {};
+                    }else{
+                        return tl::make_unexpected(err.error());
+                    }
+                });
+        }
+        bool findAndRemove(uint64_t tid){
+            auto removed = std::remove_if(calls.begin(), calls.end(), [&tid](const Call& c){ return c.tid == tid; });
+            bool ret = removed != calls.end();
+            calls.erase(removed, calls.end());
+            return ret;
+        }
+        tl::expected<void, Error> serviceResponce(const TransferMetadata& ds){
+            if(findAndRemove(ds.transfer_id)){
+                return {};
+            }else{
+                return -errors::ServiceCall::TransferIdOutOfSync;
+            }
+        }
+    public:
+        /**
+         * @brief call - same as operator()
+         */
+        auto call(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+            return operator()(node_id, msg, timeout_ms, priority);
+        }
+        /**
+         * @brief operator () - calls service on node_id with request msg
+         * @param node_id - id of the target node
+         * @param msg - message object to send
+         * @param timeout_ms - how much time to wait before request is considered timed out
+         * @param priority - priority of the sent message
+         * @return result of the message sending process. either void - ok or with cyphalpp::Error on error
+         */
+        tl::expected<void, Error> operator()(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+            auto tid = self.transfer_id_++;
+            auto ret = self.sendMessage<Request>(senderUdp.get(), TransferMetadata{
+                        DataSpecifier{DataSpecifier::ServiceRequest, static_cast<uint16_t>(node_id), Request::FixedPortId
+                    },tid, priority}, msg);
+            if(ret){
+                calls.emplace_back(Call{tid, timerFactory()});
+                calls.back().timeout->startSingleShot(timeout_ms, [this, tid](){
+                    findAndRemove(tid);
+                    errorCallback();
+                });
+                return {};
+            }
+            return tl::make_unexpected(ret.error());
+        }
+
+
+    };
+
+    /**
+     * @brief prepareServiceCalls creates a callable object to make a call to a service the result of a call will be delivered to
+     * callback f or to ef in case of a error
+     * @tparam Service - service class generated by Nunavut from DSDL
+     * @tparam F - functor class to be called with successful call
+     * @tparam Ef - functor class to be called on error
+     * @param f - functor object to be called with successful call
+     * @param ef - functor object to be called on error
+     * @return service caller to use to call this service
+     */
+    template<typename Service, typename F, typename Ef>
+    std::shared_ptr<ServiceCaller<Service>> prepareServiceCalls(F&& f, Ef&& ef){
+        static_assert(Service::Request::HasFixedPortID, "Request should have fixed port id!");
+        static_assert(Service::Response::HasFixedPortID, "Response should have fixed port id!");
+        std::shared_ptr<ServiceCaller<Service>> ret{new ServiceCaller<Service>(
+            *this, std::forward<F>(f), TimerImpl::callback_t(std::forward<Ef>(ef)))};
+        return ret;
+    }
+private:
     template<typename Message, typename F>
     Subscription* subscribe(DataSpecifier ds, F&& f){
         auto na = NetworkAddress::from_data_specifier(addr_, ds);
-        auto sub = std::make_unique<Subscription>(ds, 
+        auto sub = std::make_unique<Subscription>(ds,
             [f = std::forward<F>(f)](Subscription*const sub, const TransferMetadata& ds, const uint8_t*const data, size_t size) mutable -> tl::expected<void, Error> {
                 // if(size < Message::EXTENT_BYTES){
                 //     return -errors::ParsePacket::MessageTooSmall;
@@ -357,40 +526,6 @@ public:
         subs.emplace_back(std::move(sub));
         return subs.back().get();
     }
-
-    /**
-     * @brief sendMessage - publishes message Message with fixed port id
-     * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
-     * @param msg - message to send
-     * @param priority - priority of this message
-     * @return void if e
-     */
-    template<typename Message>
-    tl::expected<void, Error> sendMessage(const Message& msg, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
-        static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
-        return sendMessage<Message>(msg, fixed_port_id<Message::FixedPortId>, priority);
-    }
-
-    /**
-     * @brief sendMessage - publishes message Message with random port id
-     * @tparam Message - one of Nunavut-generated message classes `uavcan::si::unit::length::Scalar_1_0`, for example
-     * @tparam PortIdF - functor class to call to determine port id
-     * @tparam F - functor class to call when Message is recieved.
-     * @param msg - message to send
-     * @param portIdf - functor instance to call to determine port id
-     * @param priority - priority of this message
-     * @return
-     */
-    template<typename Message, typename PortIdF>
-    tl::expected<void, Error> sendMessage(const Message& msg, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
-        static_assert(
-            std::is_convertible<decltype(portIdf()), uint16_t>::value,
-            "Port ID callback should return uint16_t");
-        return sendMessage<Message>(sender_udp_.get(), TransferMetadata{
-            DataSpecifier{DataSpecifier::Message, 0, portIdf()
-        },transfer_id_++, priority}, msg);
-    }
-
     template<typename Message>
     tl::expected<void, Error> sendMessage(UdpSocketImpl* sock, const TransferMetadata& ds, const Message& msg){
         auto prepared = prepareFrame<Message>(ds, msg);
@@ -419,113 +554,6 @@ public:
         return {};
     }
 
-    template<typename Service>
-    class ServiceCaller{
-        using Request = typename Service::Request;
-        using Response = typename Service::Response;
-        struct Call{
-            uint64_t tid;
-            std::unique_ptr<TimerImpl> timeout;
-        };
-
-        CyphalUdp& self;
-        std::unique_ptr<UdpSocketImpl> senderUdp;
-        TimerFactory timerFactory;
-        TimerImpl::callback_t errorCallback;
-        std::vector<Call > calls;
-
-        friend class CyphalUdp;
-        ServiceCaller(
-            CyphalUdp& _self, 
-            std::unique_ptr<UdpSocketImpl> _sub, 
-            TimerFactory _timerFactory,
-            TimerImpl::callback_t _errorCallback
-        )
-        :self(_self),senderUdp(std::move(_sub)),timerFactory(std::move(_timerFactory)), errorCallback(std::move(_errorCallback)){
-        }
-        bool findAndRemove(uint64_t tid){
-            auto removed = std::remove_if(calls.begin(), calls.end(), [&tid](const Call& c){ return c.tid == tid; });
-            bool ret = removed != calls.end();
-            calls.erase(removed, calls.end());
-            return ret;
-        }
-    public:
-        /**
-         * @brief call - same as operator()
-         */
-        auto call(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
-            return operator()(node_id, msg, timeout_ms, priority);
-        }
-        /**
-         * @brief operator () - calls service on node_id with request msg
-         * @param node_id - id of the target node
-         * @param msg - message object to send
-         * @param timeout_ms - how much time to wait before request is considered timed out
-         * @param priority - priority of the sent message
-         * @return result of the message sending process. either void - ok or with cyphalpp::Error on error
-         */
-        tl::expected<void, Error> operator()(uint32_t node_id, const Request& msg, uint32_t timeout_ms=1000, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
-            auto tid = self.transfer_id_++;
-            auto ret = self.sendMessage<Request>(senderUdp.get(), TransferMetadata{
-                        DataSpecifier{DataSpecifier::ServiceRequest, static_cast<uint16_t>(node_id), Request::FixedPortId
-                    },tid, priority}, msg);
-            if(ret){
-                calls.emplace_back(Call{tid, timerFactory()});
-                calls.back().timeout->startSingleShot(timeout_ms, [this, tid](){
-                    findAndRemove(tid);
-                    errorCallback();
-                });
-                return {};
-            }
-            return tl::make_unexpected(ret.error());
-        }
-
-        tl::expected<void, Error> serviceResponce(const TransferMetadata& ds){
-            if(findAndRemove(ds.transfer_id)){
-                return {};
-            }else{
-                return -errors::ServiceCall::TransferIdOutOfSync;
-            }
-        }
-    };
-
-    /**
-     * @brief prepareServiceCalls
-     * @param f
-     * @param ef
-     * @return
-     */
-    template<typename Service, typename F, typename Ef>
-    std::shared_ptr<ServiceCaller<Service>> prepareServiceCalls(F&& f, Ef&& ef){
-        using Response = typename Service::Response;
-        static_assert(Service::Request::HasFixedPortID, "Request should have fixed port id!");
-        static_assert(Service::Response::HasFixedPortID, "Response should have fixed port id!");
-        auto senderUdp = socketFactory();
-        senderUdp->prepare(addr_, [](
-                const NetworkAddress&, const NetworkAddress&, const uint8_t*const, size_t
-        ) -> tl::expected<void, Error>{
-            return -errors::ParsePacket::HeaderWrongProtocolVersion;
-        });
-
-        std::shared_ptr<ServiceCaller<Service>> ret{new ServiceCaller<Service>(
-            *this, std::move(senderUdp), timerFactory, TimerImpl::callback_t(std::forward<Ef>(ef)))};
-        subscribe<Response>(
-            DataSpecifier{DataSpecifier::ServiceResponce, addr_.subject_or_node_id(), Response::FixedPortId},
-            [caller = ret, f = std::forward<F>(f)](
-                    Subscription* const, const TransferMetadata& ds, const Response& msg
-            ) -> tl::expected<void, Error>{
-                auto err = caller->serviceResponce(ds);
-                if(err){
-                    f(ds, msg);
-                    return {};
-                }else{
-                    return tl::make_unexpected(err.error());
-                }
-            });
-        
-        return ret;
-    }
-private:
     std::unique_ptr<UdpSocketImpl> createSocket(Subscription& sub){
         auto udp = socketFactory();
         udp->prepare(addr_, [this, &sub](

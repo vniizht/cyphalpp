@@ -7,8 +7,8 @@ DSDL_DIRS += \
     $$clean_path($$PWD/../cyphal_udp)
 
 DISTFILES += \
-    $$PWD/../cyphal_udp/Header.1.0.uavcan \
-    $$PWD/../cyphal_udp/UnicastBridgeHeader.1.0.uavcan
+    $$PWD/../cyphal_udp/Header.1.0.dsdl \
+    $$PWD/../cyphal_udp/UnicastBridgeHeader.1.0.dsdl
 
 
 isEmpty(NNVG_EXE){
@@ -43,6 +43,7 @@ for(DSDL_DIR, DSDL_DIRS){
     for(DSDL_DIR_OUTPUT, DSDL_DIR_OUTPUTS){
         eval(dsdl_$${I}.target = $$DSDL_DIR_OUTPUT);
         eval(dsdl_$${I}.depends = $$basename(DSDL_DIR).nnvg.done.a)
+        HEADERS += $$DSDL_DIR_OUTPUT
         QMAKE_EXTRA_TARGETS += dsdl_$${I}
         I=$$num_add($$I, 1)
     }

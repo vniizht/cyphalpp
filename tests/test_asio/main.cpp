@@ -126,7 +126,8 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithFixedId, TwoNodes)
     bool answered{false};
 
     const ExecuteCommand::Request sreq{
-        .command=ExecuteCommand::Request::COMMAND_STORE_PERSISTENT_STATES
+        .command=ExecuteCommand::Request::COMMAND_STORE_PERSISTENT_STATES,
+        .parameter={}
     };
     const ExecuteCommand::Response ans{
         .status = ExecuteCommand::Response::STATUS_INTERNAL_ERROR
@@ -165,7 +166,8 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithRandomId, TwoNodes)
     bool answered{false};
 
     const ExecuteCommand::Request sreq{
-        .command=ExecuteCommand::Request::COMMAND_STORE_PERSISTENT_STATES
+        .command=ExecuteCommand::Request::COMMAND_STORE_PERSISTENT_STATES,
+        .parameter={}
     };
     const ExecuteCommand::Response ans{
         .status = ExecuteCommand::Response::STATUS_INTERNAL_ERROR
