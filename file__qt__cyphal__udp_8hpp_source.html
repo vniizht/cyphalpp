@@ -14,6 +14,7 @@
 <script type="text/javascript" src="navtreedata.js"></script>
 <script type="text/javascript" src="navtree.js"></script>
 <link href="doxypress.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by DoxyPress -->
@@ -76,18 +77,19 @@ $(document).ready(function(){initNavTree('file__qt__cyphal__udp_8hpp_source.html
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;cyphalpp.hpp&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;QDebug&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">namespace </span>cyphalpp{</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;QDebug operator&lt;&lt;(QDebug ret, <span class="keyword">const</span> cyphalpp::Error&amp; e);</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> cyphalpp::errors::DataSpecifierConversion&amp; c);</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> nunavut::support::Error&amp; c);</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> cyphalpp::errors::ParsePacket&amp; c);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace </span>qt{</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">auto</span> qCyphalUdpSocket() -&gt; std::unique_ptr&lt;cyphalpp::UdpSocketImpl&gt;;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">auto</span> qCyphalTimer() -&gt; std::unique_ptr&lt;cyphalpp::TimerImpl&gt;;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;} <span class="comment">// namespace qt</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;} <span class="comment">// namespace cyphalpp</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// ndef QT_UDP_UAVCAN_HPP_INCLUDED</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span>cyphalpp{</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;QDebug operator&lt;&lt;(QDebug ret, <span class="keyword">const</span> cyphalpp::Error&amp; e);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> cyphalpp::errors::DataSpecifierConversion&amp; c);</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> nunavut::support::Error&amp; c);</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;QDebug operator&lt;&lt;(QDebug ret,<span class="keyword">const</span> cyphalpp::errors::ParsePacket&amp; c);</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>qt{</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">auto</span> qCyphalUdpSocket() -&gt; std::unique_ptr&lt;cyphalpp::UdpSocketImpl&gt;;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">auto</span> qCyphalTimer() -&gt; std::unique_ptr&lt;cyphalpp::TimerImpl&gt;;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;} <span class="comment">// namespace qt</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;} <span class="comment">// namespace cyphalpp</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// ndef QT_UDP_UAVCAN_HPP_INCLUDED</span></div>
 </div><!-- end fragment -->
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -95,7 +97,7 @@ $(document).ready(function(){initNavTree('file__qt__cyphal__udp_8hpp_source.html
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_0f63d6441a2c250919e1e8723011eb2f.html">qt</a></li><li class="navelem"><b>qt_cyphal_udp.hpp</b></li>
-    <li class="footer">Generated on ср июл. 6 2022 17:33:30 for cyphalpp &nbsp; by
+    <li class="footer">Generated on ср июл. 13 2022 10:34:23 for cyphalpp &nbsp; by
     <a href="https://www.copperspice.com/documentation-doxypress.html">
     <img class="footer" src="doxypress.png" alt="DoxyPress"/></a> 1.4.2 </li>
   </ul>

@@ -21,61 +21,63 @@ var NAVTREE =
             ] ]
           ] ],
           [ "qt", null, [
-            [ "Enum", "structcyphalpp_1_1qt_1_1Enum.html", [
-              [ "Value", "structcyphalpp_1_1qt_1_1Enum_1_1Value.html", [
-                [ "description", "structcyphalpp_1_1qt_1_1Enum_1_1Value.html#a50fc72246539f972ae4f949b9125bc4a", null ],
-                [ "name", "structcyphalpp_1_1qt_1_1Enum_1_1Value.html#a4d716a758e00c159d9bc0b39d361c52f", null ],
-                [ "value", "structcyphalpp_1_1qt_1_1Enum_1_1Value.html#aa3392e010afd288ba0301b80744b3eb0", null ]
+            [ "utils", null, [
+              [ "Enum", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html", [
+                [ "Value", "structcyphalpp_1_1qt_1_1utils_1_1Enum_1_1Value.html", [
+                  [ "description", "structcyphalpp_1_1qt_1_1utils_1_1Enum_1_1Value.html#a055676c353a772074c904a0494123de9", null ],
+                  [ "name", "structcyphalpp_1_1qt_1_1utils_1_1Enum_1_1Value.html#ad25db43a7909fc95026c5bc9ac28409e", null ],
+                  [ "value", "structcyphalpp_1_1qt_1_1utils_1_1Enum_1_1Value.html#a75b61e3763092cc29fcb11dd3c634b64", null ]
+                ] ],
+                [ "Enum", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#ae091de76be06bf093a1be0c3b8c2a81e", null ],
+                [ "getDescription", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#ac4038bec6be88079685cabc8ce037f53", null ],
+                [ "getName", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#a311ee71d2bd03c4c245e587977ed83ea", null ],
+                [ "getValue", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#ada018e02999fdfc295f908f9695ad72d", null ],
+                [ "descriptions", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#a5c7f1250e1f5f2e8434ada27370fd621", null ],
+                [ "names", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#a631aab0a19d918b42d4b476cf26fcf52", null ],
+                [ "values", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html#a599d02ce8a0afae4f9d4c44b5100a6f4", null ]
               ] ],
-              [ "Enum", "structcyphalpp_1_1qt_1_1Enum.html#a300e674120a78bddfc16bfe0eadffd0e", null ],
-              [ "getDescription", "structcyphalpp_1_1qt_1_1Enum.html#a69046d334083da7c10afcb9b654e1bd6", null ],
-              [ "getName", "structcyphalpp_1_1qt_1_1Enum.html#a529c5c6d32b5563fab4e5e83d5c8f0a2", null ],
-              [ "getValue", "structcyphalpp_1_1qt_1_1Enum.html#a4e64517266a025929720924100073410", null ],
-              [ "descriptions", "structcyphalpp_1_1qt_1_1Enum.html#a8bd33bc5ddf01f2118260d925f6b782b", null ],
-              [ "names", "structcyphalpp_1_1qt_1_1Enum.html#ae0d2d7d6c312563bc377c48077a78a32", null ],
-              [ "values", "structcyphalpp_1_1qt_1_1Enum.html#a0f647a25a72744412ec525661700ab58", null ]
-            ] ],
-            [ "FileServer", "classcyphalpp_1_1qt_1_1FileServer.html", [
-              [ "FileServer", "classcyphalpp_1_1qt_1_1FileServer.html#a8ba5e108b50795dc9d79691c1ebc1ebe", null ],
-              [ "~FileServer", "classcyphalpp_1_1qt_1_1FileServer.html#ab1533afdf9cf3d01375f52c48985e0dd", null ],
-              [ "folder", "classcyphalpp_1_1qt_1_1FileServer.html#afd33a79d0c88b6ff679ab6fc08c3a0fc", null ]
-            ] ],
-            [ "NodeData", "structcyphalpp_1_1qt_1_1NodeData.html", [
-              [ "dataFetched", "structcyphalpp_1_1qt_1_1NodeData.html#a3e3d32c6a35a6250870d146c7eb5833d", null ],
-              [ "dataFetching", "structcyphalpp_1_1qt_1_1NodeData.html#ac213e1dfbef3415082ca1dd27a704160", null ],
-              [ "heartbeat", "structcyphalpp_1_1qt_1_1NodeData.html#ae9803bd476a4ecdfa92617de114d75e8", null ],
-              [ "info", "structcyphalpp_1_1qt_1_1NodeData.html#a3f14d255ed6ef99041df78536948d882", null ],
-              [ "timeout", "structcyphalpp_1_1qt_1_1NodeData.html#a98e1cdac62c36534170794ba3c9ec662", null ]
-            ] ],
-            [ "NodeDataField", "structcyphalpp_1_1qt_1_1NodeDataField.html", [
-              [ "Field", "structcyphalpp_1_1qt_1_1NodeDataField.html#a914c2aa70cb1974862ee364b6835f461", [
-                [ "Heartbeat", "structcyphalpp_1_1qt_1_1NodeDataField.html#a914c2aa70cb1974862ee364b6835f461a83622997d22f5f18b9b09bd364cb673e", null ],
-                [ "Info", "structcyphalpp_1_1qt_1_1NodeDataField.html#a914c2aa70cb1974862ee364b6835f461a4059b0251f66a18cb56f544728796875", null ]
+              [ "FileServer", "classcyphalpp_1_1qt_1_1utils_1_1FileServer.html", [
+                [ "FileServer", "classcyphalpp_1_1qt_1_1utils_1_1FileServer.html#a3143d94126b76d781f61c19d615b2e26", null ],
+                [ "~FileServer", "classcyphalpp_1_1qt_1_1utils_1_1FileServer.html#a81c804a958ef4f48302f599f4e4e47ce", null ],
+                [ "folder", "classcyphalpp_1_1qt_1_1utils_1_1FileServer.html#a51837571c97d62da0ba11f03af133aa0", null ]
               ] ],
-              [ "description", "structcyphalpp_1_1qt_1_1NodeDataField.html#a20cb1331ff8f066fc3e107f98745df69", null ],
-              [ "field", "structcyphalpp_1_1qt_1_1NodeDataField.html#a9f41239446a39306f9f2671e5da0d3ee", null ],
-              [ "get", "structcyphalpp_1_1qt_1_1NodeDataField.html#a3b1cca33c8f256090e2c74cea198369a", null ],
-              [ "getEdit", "structcyphalpp_1_1qt_1_1NodeDataField.html#a4a8fa3f81c412ff7a7a3a1ff34e8e525", null ],
-              [ "getTooltip", "structcyphalpp_1_1qt_1_1NodeDataField.html#afd74d3f3bf2d071b7584647970de0c13", null ],
-              [ "name", "structcyphalpp_1_1qt_1_1NodeDataField.html#a7087de14b897144f4a415c1702418248", null ]
-            ] ],
-            [ "NodeRegisters", "classcyphalpp_1_1qt_1_1NodeRegisters.html", [
-              [ "NodeRegisters", "classcyphalpp_1_1qt_1_1NodeRegisters.html#a62120be8a07f3eddd7206da24e57df52", null ],
-              [ "~NodeRegisters", "classcyphalpp_1_1qt_1_1NodeRegisters.html#a0a32b678a0b510f9f02547b3b7d0261e", null ],
-              [ "columnCount", "classcyphalpp_1_1qt_1_1NodeRegisters.html#ae17bfaf319bd0550996593fbca921317", null ],
-              [ "data", "classcyphalpp_1_1qt_1_1NodeRegisters.html#a237812ca76272bdb0ef8ee3d80d25315", null ],
-              [ "flags", "classcyphalpp_1_1qt_1_1NodeRegisters.html#adb84a42854278acb42ecf88025de9ecd", null ],
-              [ "headerData", "classcyphalpp_1_1qt_1_1NodeRegisters.html#aff34bf9817847c65d0099474aad064c9", null ],
-              [ "rowCount", "classcyphalpp_1_1qt_1_1NodeRegisters.html#aa81b12f26907ee7b39004072f22f783e", null ],
-              [ "setData", "classcyphalpp_1_1qt_1_1NodeRegisters.html#a5656d7871f62cb034c5e606767aea64d", null ]
-            ] ],
-            [ "NodesHealthModel", "classcyphalpp_1_1qt_1_1NodesHealthModel.html", [
-              [ "NodesHealthModel", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a39850fab4dd3713ea6ea305c90c4a465", null ],
-              [ "~NodesHealthModel", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a0fd1265ddfd09280a609200332758c8e", null ],
-              [ "columnCount", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a63ac90be61574cf31967a82142277de0", null ],
-              [ "data", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a33fbd9f94e746b3d222e379d240581da", null ],
-              [ "headerData", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a7577e2234bb968659d3f2395cba6a9fe", null ],
-              [ "rowCount", "classcyphalpp_1_1qt_1_1NodesHealthModel.html#a4b9118a6cbb8195de190938c1e5d5697", null ]
+              [ "NodeData", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html", [
+                [ "dataFetched", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html#a125291858a326152bb3eebe5592ddfb5", null ],
+                [ "dataFetching", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html#af6bb0384fb88a8a43fad4be0d1d22ee1", null ],
+                [ "heartbeat", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html#a5dce77e445c05656ad4e65c6545e1a8a", null ],
+                [ "info", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html#a9a2e88991155d35db3c6f4182cf30cc8", null ],
+                [ "timeout", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html#a49a6d3cf2ee09fa836151679549a9854", null ]
+              ] ],
+              [ "NodeDataField", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html", [
+                [ "Field", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a9c0868a70bc72429272842ed0ba35ad6", [
+                  [ "Heartbeat", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a9c0868a70bc72429272842ed0ba35ad6a83622997d22f5f18b9b09bd364cb673e", null ],
+                  [ "Info", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a9c0868a70bc72429272842ed0ba35ad6a4059b0251f66a18cb56f544728796875", null ]
+                ] ],
+                [ "description", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a383250fb66ae68f375a3f50c3aa27294", null ],
+                [ "field", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#aa969b7acac141c7dd0bd0f8f875a6e08", null ],
+                [ "get", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a87e7104423955744fed38eb5d2dc55f2", null ],
+                [ "getEdit", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a78bbe67f36a4f914379043c51769f5c0", null ],
+                [ "getTooltip", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a83d7e0344cfd36819811859d56f2d99e", null ],
+                [ "name", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html#a605425ae52bd9447bdf3ff40b5a37b55", null ]
+              ] ],
+              [ "NodeRegisters", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html", [
+                [ "NodeRegisters", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a06a6c9d9b66ec884906ea35f491d0816", null ],
+                [ "~NodeRegisters", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#aa9a3760a3cc78bb4961142bf9cc21d49", null ],
+                [ "columnCount", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a34f4e082437f70f5d0c299215eff987d", null ],
+                [ "data", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a7a76e655570a54cb66c3f065d78a054e", null ],
+                [ "flags", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a98f26222c03d287b3fd7d74b21cbfa78", null ],
+                [ "headerData", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a79b15c39bd73a3dd9181f71291970e6c", null ],
+                [ "rowCount", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a3ae45bef2b8519a3e4ee565968a79305", null ],
+                [ "setData", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html#a32894691d23eefdcbd3727d4f9d68144", null ]
+              ] ],
+              [ "NodesHealthModel", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html", [
+                [ "NodesHealthModel", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a02f238446d41e584137824898472f4c1", null ],
+                [ "~NodesHealthModel", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a483b04e32f5d5a13d384e8a39d28cd33", null ],
+                [ "columnCount", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a7a4f0c54bcff1c4f3937b21fe820684c", null ],
+                [ "data", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a8775690355403a82a72b133038ca0053", null ],
+                [ "headerData", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a6589df6bb0096833614041ab15d1d415", null ],
+                [ "rowCount", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html#a9e9fbd47e7c4be4ab61dea99bfc31f20", null ]
+              ] ]
             ] ],
             [ "QCyphalTimer", "classcyphalpp_1_1qt_1_1QCyphalTimer.html", [
               [ "QCyphalTimer", "classcyphalpp_1_1qt_1_1QCyphalTimer.html#ad1690e5519c4baccf2962d4434b9b0a7", null ],
@@ -165,10 +167,10 @@ var NAVTREE =
         [ "cyphalpp::HeartbeatPublish< clock_t >", "classcyphalpp_1_1HeartbeatPublish.html", null ],
         [ "cyphalpp::MessageAddr", "structcyphalpp_1_1MessageAddr.html", null ],
         [ "cyphalpp::NetworkAddress", "structcyphalpp_1_1NetworkAddress.html", null ],
-        [ "cyphalpp::qt::Enum< E, T, field >", "structcyphalpp_1_1qt_1_1Enum.html", null ],
-        [ "cyphalpp::qt::Enum< E, T, field >::Value", "structcyphalpp_1_1qt_1_1Enum_1_1Value.html", null ],
-        [ "cyphalpp::qt::NodeData", "structcyphalpp_1_1qt_1_1NodeData.html", null ],
-        [ "cyphalpp::qt::NodeDataField", "structcyphalpp_1_1qt_1_1NodeDataField.html", null ],
+        [ "cyphalpp::qt::utils::Enum< E, T, field >", "structcyphalpp_1_1qt_1_1utils_1_1Enum.html", null ],
+        [ "cyphalpp::qt::utils::Enum< E, T, field >::Value", "structcyphalpp_1_1qt_1_1utils_1_1Enum_1_1Value.html", null ],
+        [ "cyphalpp::qt::utils::NodeData", "structcyphalpp_1_1qt_1_1utils_1_1NodeData.html", null ],
+        [ "cyphalpp::qt::utils::NodeDataField", "structcyphalpp_1_1qt_1_1utils_1_1NodeDataField.html", null ],
         [ "cyphalpp::TimerImpl", "structcyphalpp_1_1TimerImpl.html", [
           [ "cyphalpp::asio::AsioTimer", "classcyphalpp_1_1asio_1_1AsioTimer.html", null ],
           [ "cyphalpp::qt::QCyphalTimer", "classcyphalpp_1_1qt_1_1QCyphalTimer.html", null ]
@@ -179,11 +181,11 @@ var NAVTREE =
           [ "cyphalpp::qt::QCyphalUdpSocket", "classcyphalpp_1_1qt_1_1QCyphalUdpSocket.html", null ]
         ] ],
         [ "QAbstractTableModel", null, [
-          [ "cyphalpp::qt::NodeRegisters", "classcyphalpp_1_1qt_1_1NodeRegisters.html", null ],
-          [ "cyphalpp::qt::NodesHealthModel", "classcyphalpp_1_1qt_1_1NodesHealthModel.html", null ]
+          [ "cyphalpp::qt::utils::NodeRegisters", "classcyphalpp_1_1qt_1_1utils_1_1NodeRegisters.html", null ],
+          [ "cyphalpp::qt::utils::NodesHealthModel", "classcyphalpp_1_1qt_1_1utils_1_1NodesHealthModel.html", null ]
         ] ],
         [ "QObject", null, [
-          [ "cyphalpp::qt::FileServer", "classcyphalpp_1_1qt_1_1FileServer.html", null ]
+          [ "cyphalpp::qt::utils::FileServer", "classcyphalpp_1_1qt_1_1utils_1_1FileServer.html", null ]
         ] ],
         [ "QTimer", null, [
           [ "cyphalpp::qt::QCyphalTimer", "classcyphalpp_1_1qt_1_1QCyphalTimer.html", null ]
