@@ -18,7 +18,8 @@ class Value_1_0;
 namespace cyphalpp {
 class CyphalUdp;
 
-namespace qt {
+namespace qt{
+namespace utils {
 
 QString toString(const uavcan::_register::Value_1_0& v);
 QVariant toVariant(const uavcan::_register::Value_1_0& v);
@@ -43,6 +44,7 @@ private:
     QScopedPointer<NodeRegistersPrivate> const d_ptr;
 };
 
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp
 #endif // NODEREGISTERS_H

@@ -44,7 +44,7 @@ void node_health::test_model()
     cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cy.setAddr(lhbase | 0x1U);
     cyphalpp::HeartbeatPublish<> hb(cy, cyphalpp::qt::qCyphalTimer());
-    auto model = new cyphalpp::qt::NodesHealthModel(cy, this);
+    auto model = new cyphalpp::qt::utils::NodesHealthModel(cy, this);
     new QAbstractItemModelTester(model, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
 
     cyphalpp::CyphalUdp cyNode2(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);

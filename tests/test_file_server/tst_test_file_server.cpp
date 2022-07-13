@@ -37,7 +37,7 @@ void test_file_server::test_file_server_contructs()
     auto lhbase = (lha.toIPv4Address() & static_cast<uint32_t>(~0xFFFFFFU)) | (0x100 << 16);
     cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cy.setAddr(lhbase | 0x1U);
-    cyphalpp::qt::FileServer fs(cy);
+    cyphalpp::qt::utils::FileServer fs(cy);
 
 
     cyphalpp::CyphalUdp cy2(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);

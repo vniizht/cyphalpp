@@ -330,7 +330,7 @@
         "html-output": ".",
         "html-search": false,
         "html-stylesheets": [
-            ""
+            "vendored/doxygen-awesome-css/doxygen-awesome.css"
         ],
         "html-timestamp": true,
         "mathjax-codefile": "",

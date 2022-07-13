@@ -15,7 +15,8 @@ class QTimer;
 namespace cyphalpp {
 class CyphalUdp;
 
-namespace qt {
+namespace qt{
+namespace utils {
 
 class NodesHealthModelPrivate;
 /**
@@ -36,7 +37,7 @@ private:
     QScopedPointer<NodesHealthModelPrivate> const d_ptr;
 };
 
-
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp
 #endif // NODESHEALTHMODEL_H

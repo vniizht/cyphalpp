@@ -14,7 +14,8 @@
 Q_DECLARE_METATYPE(uavcan::_register::Value_1_0)
 
 namespace cyphalpp {
-namespace qt {
+namespace qt{
+namespace utils {
 
 using List = uavcan::_register::List::Service_1_0;
 using Access = uavcan::_register::Access::Service_1_0;
@@ -362,5 +363,6 @@ bool fromVariant(uavcan::_register::Value_1_0 &v, const QVariant &newVal)
     return false;
 }
 
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp

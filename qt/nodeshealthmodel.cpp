@@ -15,7 +15,8 @@
 
 
 namespace cyphalpp {
-namespace qt {
+namespace qt{
+namespace utils {
 
 using namespace uavcan::node;
 
@@ -367,5 +368,6 @@ QVariant NodesHealthModel::headerData(int section, Qt::Orientation orientation, 
 
 
 
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp

@@ -13,7 +13,8 @@ namespace cyphalpp {
 
 class CyphalUdp;
 
-namespace qt {
+namespace qt{
+namespace utils {
 
 class FileServerPrivate;
 
@@ -30,6 +31,7 @@ private:
     QScopedPointer<FileServerPrivate> const d_ptr;
 };
 
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp
 #endif // FILESERVER_HPP

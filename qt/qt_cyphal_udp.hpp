@@ -8,6 +8,7 @@
 #include "cyphalpp.hpp"
 #include <QDebug>
 
+
 namespace cyphalpp{
 QDebug operator<<(QDebug ret, const cyphalpp::Error& e);
 QDebug operator<<(QDebug ret,const cyphalpp::errors::DataSpecifierConversion& c);

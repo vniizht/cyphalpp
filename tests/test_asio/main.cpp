@@ -23,31 +23,35 @@ using boost::asio::ip::address_v4;
 using boost::asio::ip::udp;
 using namespace std::chrono_literals;
 
-struct CyphalAsioFixture{
-    io_service service;
-    SocketFactory udpSockets;
-    TimerFactory timers;
-    CyphalAsioFixture():
-        service{},
-        udpSockets{asio::asioUdpSocket(service)},
-        timers{asio::asioTimer(service)}{
-
-    }
-    virtual ~CyphalAsioFixture(){}
-};
-
-template<uint16_t node_id>
-struct Node: public virtual CyphalAsioFixture{
+template<typename Base, uint16_t node_id>
+struct Node: public virtual Base{
     CyphalUdp node;
-    Node():CyphalAsioFixture(), node(udpSockets, timers){
-        node.setAddr((address_v4::loopback().to_uint() & (~0x1FFF)) | node_id);
+    Node():Base(), node(Base::udpSockets, Base::timers){
+        node.setAddr(Base::base_addr() | node_id);
     }
     virtual ~Node() override {
     }
 };
 
-struct TwoNodes: public Node<1>, public Node<2>{
-    TwoNodes(): Node<1>(), Node<2>(){}
+struct CyphalAsioNetwork{
+    io_service service;
+    SocketFactory udpSockets;
+    TimerFactory timers;
+    CyphalAsioNetwork():
+        service{},
+        udpSockets{asio::asioUdpSocket(service)},
+        timers{asio::asioTimer(service)}{
+
+    }
+    static uint32_t base_addr(){ return address_v4::loopback().to_uint() & (~0x1FFF);}
+    virtual ~CyphalAsioNetwork(){}
+};
+
+template<uint16_t node_id>
+using AsioNode = Node<CyphalAsioNetwork, node_id>;
+
+struct TwoNodes: public AsioNode<1>, public AsioNode<2>{
+    TwoNodes(): AsioNode<1>(), AsioNode<2>(){}
     virtual ~TwoNodes() override {}
 };
 
@@ -60,7 +64,7 @@ BOOST_FIXTURE_TEST_CASE( TestMessageFixedId, TwoNodes)
         .mode={.value=uavcan::node::Mode_1_0::OPERATIONAL},
         .vendor_specific_status_code=128
     };
-    Node<1>::node.subscribeMessage<uavcan::node::Heartbeat_1_0>([this, &called, &shb](const TransferMetadata& tm, const uavcan::node::Heartbeat_1_0& hb){
+    AsioNode<1>::node.subscribeMessage<uavcan::node::Heartbeat_1_0>([this, &called, &shb](const TransferMetadata& tm, const uavcan::node::Heartbeat_1_0& hb){
         if(tm.data.node_id == 2 and hb == shb){
             called = true;
             service.stop();
@@ -68,7 +72,7 @@ BOOST_FIXTURE_TEST_CASE( TestMessageFixedId, TwoNodes)
     });
 
 
-    Node<2>::node.sendMessage(shb);
+    AsioNode<2>::node.sendMessage(shb);
 
     service.run_for(1000ms);
 
@@ -91,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE( TestMessageRandomId, TwoNodes)
         .timestamp={.microsecond=12},
         .meter =12345
     };
-    Node<1>::node.subscribeMessage<uavcan::si::sample::length::Scalar_1_0>([this, &called, &shb](
+    AsioNode<1>::node.subscribeMessage<uavcan::si::sample::length::Scalar_1_0>([this, &called, &shb](
             const TransferMetadata& tm, const uavcan::si::sample::length::Scalar_1_0& hb
     ){
         if(tm.data.node_id == 2 and hb == shb){
@@ -101,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE( TestMessageRandomId, TwoNodes)
     }, fixed_port_id<100>);
 
 
-    Node<2>::node.sendMessage(shb, fixed_port_id<100>);
+    AsioNode<2>::node.sendMessage(shb, fixed_port_id<100>);
 
     service.run_for(1000ms);
 
@@ -132,7 +136,7 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithFixedId, TwoNodes)
     const ExecuteCommand::Response ans{
         .status = ExecuteCommand::Response::STATUS_INTERNAL_ERROR
     };
-    Node<2>::node.subscribeServiceRequest<ExecuteCommand>([this, &callback_called, &sreq, &ans](const TransferMetadata& tm, const ExecuteCommand::Request& req){
+    AsioNode<2>::node.subscribeServiceRequest<ExecuteCommand>([this, &callback_called, &sreq, &ans](const TransferMetadata& tm, const ExecuteCommand::Request& req){
         if(tm.data.node_id == 1 and req == sreq){
             callback_called = true;
         }else{
@@ -142,7 +146,7 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithFixedId, TwoNodes)
     });
 
 
-    auto service_caller = Node<1>::node.prepareServiceCalls<ExecuteCommand>([this, &answered, &ans](const TransferMetadata& tm, const ExecuteCommand::Response& rsp){
+    auto service_caller = AsioNode<1>::node.prepareServiceCalls<ExecuteCommand>([this, &answered, &ans](const TransferMetadata& tm, const ExecuteCommand::Response& rsp){
         if(tm.data.node_id == 2 and ans == rsp){
             answered = true;
             service.stop();
@@ -172,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithRandomId, TwoNodes)
     const ExecuteCommand::Response ans{
         .status = ExecuteCommand::Response::STATUS_INTERNAL_ERROR
     };
-    Node<2>::node.subscribeServiceRequest<ExecuteCommand>([this, &callback_called, &sreq, &ans](const TransferMetadata& tm, const ExecuteCommand::Request& req){
+    AsioNode<2>::node.subscribeServiceRequest<ExecuteCommand>([this, &callback_called, &sreq, &ans](const TransferMetadata& tm, const ExecuteCommand::Request& req){
         if(tm.data.node_id == 1 and req == sreq){
             callback_called = true;
         }else{
@@ -182,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithRandomId, TwoNodes)
     });
 
 
-    auto service_caller = Node<1>::node.prepareServiceCalls<ExecuteCommand>([this, &answered, &ans](const TransferMetadata& tm, const ExecuteCommand::Response& rsp){
+    auto service_caller = AsioNode<1>::node.prepareServiceCalls<ExecuteCommand>([this, &answered, &ans](const TransferMetadata& tm, const ExecuteCommand::Response& rsp){
         if(tm.data.node_id == 2 and ans == rsp){
             answered = true;
             service.stop();

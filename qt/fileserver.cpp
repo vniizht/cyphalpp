@@ -18,7 +18,8 @@
 using namespace uavcan::file;
 
 namespace cyphalpp {
-namespace qt {
+namespace qt{
+namespace utils {
 class FileServerPrivate{
     Q_DECLARE_PUBLIC(FileServer)
     FileServer* const q_ptr;
@@ -130,6 +131,7 @@ QDir FileServer::folder() const
     return d->folder.path();
 }
 
+} // namespace utils
 } // namespace qt
 } // namespace cyphalpp
 

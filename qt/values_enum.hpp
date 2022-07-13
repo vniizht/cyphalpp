@@ -9,8 +9,8 @@
 #include <QVariant>
 
 namespace cyphalpp {
-
 namespace qt{
+namespace utils{
 
 template<typename E, typename T, T E::* field>
 struct Enum{
@@ -63,7 +63,7 @@ using EnumValue = Enum<E, decltype (E::value), &E::value>;
 template<typename E>
 using EnumStatus = Enum<E, decltype (E::status), &E::status>;
 
+} // namespace utils
 } // namespace qt
-
 } // namespace cyphalpp
 #endif // VALUES_ENUM_HPP
