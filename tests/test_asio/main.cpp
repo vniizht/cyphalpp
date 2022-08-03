@@ -193,8 +193,8 @@ BOOST_FIXTURE_TEST_CASE( TestServiceWithRandomId, TwoNodes)
         }
     }, [this](){
         std::clog << "Error!" << std::endl;
-        service.stop();}
-    );
+        service.stop();
+    });
 
     BOOST_TEST( bool{service_caller->call(2, sreq)} );
 

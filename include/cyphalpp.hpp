@@ -78,7 +78,9 @@ public:
     /// returns subnet id
     constexpr uint8_t subnet_id() const {   return static_cast<uint8_t>((value_ >> 16) & 0x7FU); }
     /// for multicast addresses returns subject_id, for unicast adresses returns node_id
-    constexpr uint16_t subject_or_node_id() const { return static_cast<uint16_t>(value_ & 0x1FFFU); }
+    constexpr uint16_t subject_id() const { return static_cast<uint16_t>(value_ & 0x1FFFU); }
+    /// for multicast addresses returns subject_id, for unicast adresses returns node_id
+    constexpr uint16_t node_id() const { return static_cast<uint16_t>(value_ & 0xFFFFU); }
     /// returns if this address is a valid multicast address for UAVCAN/UDP
     constexpr bool isValidMessage() const{  return prefix_9bit() ==  0b111011110; }
     /// return 32-bit IPv4 address in __HOST__ byte order!
@@ -151,8 +153,8 @@ inline tl::expected<DataSpecifier, Error> DataSpecifier::from_packet(
         if(dest.port == MULTICAST_PORT){
             return DataSpecifier{
                 DataSpecifier::Message,
-                source.addr.subject_or_node_id(),
-                dest.addr.subject_or_node_id(),
+                source.addr.node_id(),
+                dest.addr.subject_id(),
             };
         }
         return -errors::DataSpecifierConversion::WrongPort;
@@ -160,7 +162,7 @@ inline tl::expected<DataSpecifier, Error> DataSpecifier::from_packet(
     if (dest.port >= UNICAST_BASE_PORT){
         return DataSpecifier{
             (dest.port % 2 == 0)?(DataSpecifier::ServiceRequest):(DataSpecifier::ServiceResponce),
-            source.addr.subject_or_node_id(),
+            source.addr.node_id(),
             static_cast<uint16_t>((dest.port - UNICAST_BASE_PORT) / 2U),
         };
     }
@@ -324,7 +326,7 @@ public:
             std::is_convertible<decltype(portIdF()), uint16_t>::value,
             "Port ID callback should return uint16_t");
         DataSpecifier ds{
-            DataSpecifier::ServiceRequest, addr_.subject_or_node_id(), portIdF()
+            DataSpecifier::ServiceRequest, addr_.node_id(), portIdF()
         };
         subscribe<Request>(
             ds, [this, f = std::forward<F>(f)](
@@ -405,7 +407,7 @@ public:
                 return -errors::ParsePacket::HeaderWrongProtocolVersion;
             });
             self.subscribe<Response>(
-                DataSpecifier{DataSpecifier::ServiceResponce, self.addr_.subject_or_node_id(), Response::FixedPortId},
+                DataSpecifier{DataSpecifier::ServiceResponce, self.addr_.node_id(), Response::FixedPortId},
                 [this, f = std::forward<F>(f)](
                         Subscription* const, const TransferMetadata& ds, const Response& msg
                 ) -> tl::expected<void, Error>{
