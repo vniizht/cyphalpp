@@ -42,7 +42,7 @@ class NodeRegistersPrivate{
         AccessRq(int i, Access::Request r):index(i), rq(r){}
     };
     std::queue<AccessRq> accessQueue{};
-    bool accessInProgress;
+    bool accessInProgress{false};
     NodeRegistersPrivate(NodeRegisters * const q, CyphalUdp &uc_, uint16_t node_id_)
         :q_ptr(q), uc(uc_), node_id(node_id_){
         auto timer = new QTimer(q);
