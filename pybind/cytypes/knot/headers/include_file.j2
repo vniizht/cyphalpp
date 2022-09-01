@@ -1,0 +1,9 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+
+{% if T.inner_type is defined -%}
+#include <{{ "%s.hpp" |format(T | full_reference_name | replace("::", "/")) }}>
+{%- endif %}
+{% include "cypypp.hpp.j2"  %}

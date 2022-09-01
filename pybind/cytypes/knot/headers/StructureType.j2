@@ -1,0 +1,12 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+
+{%- extends "base_.j2" %}
+{%- from "binding.j2" import generate_binding -%}
+{%- block object -%}
+
+{{ generate_binding(T, "py::module_") }}
+
+{%- endblock -%}

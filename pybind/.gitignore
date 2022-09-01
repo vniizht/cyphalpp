@@ -1,0 +1,8 @@
+__pycache__
+build
+dist
+*.so
+d.db*
+*.egg-info
+.cache
+.ipynb_checkpoints

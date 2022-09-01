@@ -1,0 +1,59 @@
+//
+// Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+// This software is distributed under the terms of the MIT License.
+//
+
+#ifndef CYPYPP_DSDL_SUPPORT_HPP
+#define CYPYPP_DSDL_SUPPORT_HPP
+#include <nunavut/support/serialization.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <iostream>
+#include <vector>
+#include <functional>
+
+namespace py = pybind11;
+
+using NunavutError = nunavut::support::Error;
+inline py::str nunavuterror2pystr(const NunavutError& e){
+    switch(e){
+        case NunavutError::SERIALIZATION_INVALID_ARGUMENT: return {"SERIALIZATION_INVALID_ARGUMENT" };
+        case NunavutError::SERIALIZATION_BUFFER_TOO_SMALL: return {"SERIALIZATION_BUFFER_TOO_SMALL" };
+        case NunavutError::REPRESENTATION_BAD_ARRAY_LENGTH: return {"REPRESENTATION_BAD_ARRAY_LENGTH" };
+        case NunavutError::REPRESENTATION_BAD_UNION_TAG: return {"REPRESENTATION_BAD_UNION_TAG" };
+        case NunavutError::REPRESENTATION_BAD_DELIMITER_HEADER: return {"REPRESENTATION_BAD_DELIMITER_HEADER" };
+    }
+    return {"Err?"};
+}
+
+inline void verify_buffer_format(const py::buffer_info& info){
+    if (info.format != py::format_descriptor<uint8_t>::format()){
+        throw std::runtime_error("Incompatible format: expected a uint8_t array!");
+    }
+    if (info.shape.size() != 1){
+        throw std::runtime_error("Incompatible shape: expected 1!");
+    }
+    if(info.shape[0] < 0){
+        throw std::runtime_error("Invalid size: <0 !");
+    }
+}
+
+using DeclarationFunctionsVector = std::vector<std::function<void()>>;
+
+inline void extend_move(DeclarationFunctionsVector& v, DeclarationFunctionsVector&& v_prime){
+    v.reserve(v.size() + std::distance(v_prime.begin(),v_prime.end()));
+    v.insert(v.end(), std::make_move_iterator(v_prime.begin()), std::make_move_iterator(v_prime.end()));
+}
+
+struct D{
+    const char* f; bool log;
+    D(const char* f_): f(f_), log(getenv("DBG") == nullptr){
+        if(log){ std::cout << "<<<" << f << std::endl; }
+    }
+    ~D(){ 
+        if(log){ std::cout << ">>>" << f << std::endl; }
+    }
+};
+//#define DBG D d{__PRETTY_FUNCTION__};
+#define DBG
+#endif // CYPYPP_DSDL_SUPPORT_HPP

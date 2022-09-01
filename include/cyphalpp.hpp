@@ -298,6 +298,22 @@ public:
             });
     }
 
+    template<typename PortIdF, typename F>
+    void subscribeRawMessage(F&& f, PortIdF&& portIdF){
+        static_assert(
+            std::is_convertible<decltype(portIdF()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
+        DataSpecifier ds{
+            DataSpecifier::Message, 0, portIdF()
+        };
+        subscribeRaw(ds, [f = std::forward<F>(f)](
+                Subscription*const, const TransferMetadata& ds, const uint8_t*const data, size_t size
+        ) -> tl::expected<void, Error>{
+            f(ds, data, size);
+            return {};
+        });
+    }
+
     /**
      * @brief subscribeServiceRequest - creates a server for a service Service with fixed port id
      * @tparam Service - one of Nunavut-generated service classes `uavcan::node::ExecuteCommand_1_0`, for example
@@ -342,6 +358,36 @@ public:
         });
     }
 
+
+    struct RawResponse{
+        std::function<size_t(uint8_t*, size_t)> serialization;
+        size_t extent;
+    };
+
+    template<typename PortIdF, typename F>
+    void subscribeRawServiceRequest(PortIdF&& portIdF, F&& f){
+        static_assert(
+            std::is_convertible<decltype(portIdF()), uint16_t>::value,
+            "Port ID callback should return uint16_t");
+        DataSpecifier ds{
+            DataSpecifier::ServiceRequest, 0, portIdF()
+        };
+        subscribeRaw(ds, [this, f = std::forward<F>(f)](
+                Subscription*const sub, const TransferMetadata& ds, const uint8_t*const data, size_t size
+            ) -> tl::expected<void, Error>{
+                tl::expected<RawResponse, Error> ret = f(ds, data, size);
+                if(not ret){
+                    return tl::unexpected(std::move(ret).error());
+                }
+                auto& rv = ret.value();
+                return sendMessage(
+                    sub->udp.get(), TransferMetadata{
+                        DataSpecifier{DataSpecifier::ServiceResponce, ds.data.node_id, ds.data.subject_id},
+                        ds.transfer_id, ds.priority
+                    }, rv.extent, rv.serialization);
+        }   );
+    }
+
     /**
      * @brief sendMessage - publishes message Message with fixed port id
      * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
@@ -373,6 +419,19 @@ public:
         return sendMessage<Message>(sender_udp_.get(), TransferMetadata{
             DataSpecifier{DataSpecifier::Message, 0, portIdf()
         },transfer_id_++, priority}, msg);
+    }
+    template<typename PortIdF>
+    tl::expected<void, Error> sendMessage(const uint8_t*const data, size_t size, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+        return sendMessage(sender_udp_.get(), TransferMetadata{
+            DataSpecifier{DataSpecifier::Message, 0, portIdf()
+        },transfer_id_++, priority}, data, size);
+    }
+
+    template<typename SerializationF, typename PortIdF>
+    tl::expected<void, Error> sendMessage(size_t extent, SerializationF serf, PortIdF&& portIdf, uint8_t priority = cyphal_udp::Header_1_0::PriorityNominal){
+        return sendMessage(sender_udp_.get(), TransferMetadata{
+            DataSpecifier{DataSpecifier::Message, 0, portIdf()
+        },transfer_id_++, priority}, extent, serf);
     }
 
 
@@ -516,7 +575,7 @@ private:
         auto na = NetworkAddress::from_data_specifier(addr_, ds);
         auto sub = std::make_unique<Subscription>(ds,
             [f = std::forward<F>(f)](Subscription*const sub, const TransferMetadata& ds, const uint8_t*const data, size_t size) mutable -> tl::expected<void, Error> {
-                return f(ds, data, size);
+                return f(sub, ds, data, size);
             }, nullptr
         );
         sub->udp = createSocket(*sub.get());
@@ -531,6 +590,26 @@ private:
     template<typename Message>
     tl::expected<void, Error> sendMessage(UdpSocketImpl* sock, const TransferMetadata& ds, const Message& msg){
         auto prepared = prepareFrame<Message>(ds, msg);
+        if(not prepared){
+            return tl::make_unexpected(prepared.error());
+        }
+        auto na = NetworkAddress::from_data_specifier(addr_, ds.data);
+        auto sentBytes = sock->writeTo(na, buffer, prepared.value());
+        if(sentBytes != prepared.value()){
+            // Serial.println("Failed to write message");
+            return tl::make_unexpected<int8_t>(-1);
+        }
+        return {};
+    }
+    template<typename SerializationF>
+    tl::expected<void, Error> sendMessage(UdpSocketImpl* sock, const TransferMetadata& ds, size_t extent, SerializationF&& serf){
+        auto prepared = prepareRawFrame(ds, [this, extent, serf = std::move(serf)]()->tl::expected<size_t, Error>{
+            auto msgSize = cyphal_udp::Header_1_0::EXTENT_BYTES + extent;
+            if(msgSize > UDP_MAX_MTU){
+                return -errors::ParsePacket::MultiframeTransfersNotSupported;
+            }
+            return serf(buffer + cyphal_udp::Header_1_0::EXTENT_BYTES, UDP_MAX_MTU - cyphal_udp::Header_1_0::EXTENT_BYTES);
+        });
         if(not prepared){
             return tl::make_unexpected(prepared.error());
         }
@@ -603,7 +682,7 @@ private:
     template<typename Message>
     tl::expected<size_t, Error> prepareMessage(const Message& msg){
         constexpr static auto msgSize = cyphal_udp::Header_1_0::EXTENT_BYTES + Message::EXTENT_BYTES;
-        static_assert(msgSize < UDP_MAX_MTU, "Multiframe transfers not implemented!");
+        static_assert(msgSize <= UDP_MAX_MTU, "Multiframe transfers not implemented!");
         auto res = msg.serialize({ buffer + cyphal_udp::Header_1_0::EXTENT_BYTES,  Message::EXTENT_BYTES });
         if(not res){
             return tl::unexpected<Error>(res.error());
@@ -614,7 +693,7 @@ private:
 
     tl::expected<size_t, Error> prepareBuffer(const uint8_t*const data, size_t size){
         auto msgSize = cyphal_udp::Header_1_0::EXTENT_BYTES + size;
-        if(msgSize < UDP_MAX_MTU){
+        if(msgSize > UDP_MAX_MTU){
             return -errors::ParsePacket::MultiframeTransfersNotSupported;
         }
         std::copy_n(data, size, buffer + cyphal_udp::Header_1_0::EXTENT_BYTES);

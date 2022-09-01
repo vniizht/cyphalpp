@@ -1,0 +1,33 @@
+{%- extends "base_.j2" %}
+{%- block object -%}
+{% for type in T.get_nested_namespaces() %}
+#include <{{ "%s" |format(type.full_name | replace(".", "/")) }}/_namespace_.py.hpp>
+{%- endfor %}
+
+{% for type, _ in T.get_nested_types()  %}
+{% if type.short_name != "_" %}
+#include <{{ "%s%s" |format(type | full_reference_name | replace("::", "/"), ".py.hpp") }}>
+{%- endif %}
+{%- endfor %}
+
+DeclarationFunctionsVector init_{{ as_macro_name(T) }}(py::module_& m)
+#ifndef {{ as_macro_name(T) }}_IMPL
+;
+#else
+{
+    DBG
+    DeclarationFunctionsVector ret;
+    py::module_ submod = m.def_submodule("{{T._short_name | id}}");
+    {% for type in T.get_nested_namespaces() -%}
+    extend_move(ret, init_{{as_macro_name(type)}}(submod));
+    {% endfor %}
+
+    {% for type, _ in T.get_nested_types()  -%}
+    {%- if type.short_name != "_" -%}
+    extend_move(ret, init_{{as_macro_name(type)}}(submod));
+    {% endif -%}
+    {%- endfor %}
+    return ret;
+}
+#endif
+{%- endblock -%}

@@ -1,0 +1,20 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+{%- from "binding.j2" import as_macro_name -%}
+
+#ifndef {{ as_macro_name(T) }}_PY_HPP_INCLUDED
+#define {{ as_macro_name(T) }}_PY_HPP_INCLUDED
+{% include "include_file.j2"  %}
+{%- for n in T | includes %}
+{% if loop.first -%}
+
+{# Add newline before first include #}
+{% endif -%}
+#include {{ n }}
+{%- endfor %}
+
+{% block object %}{% endblock %}
+
+#endif // {{ as_macro_name(T) }}_PY_HPP_INCLUDED

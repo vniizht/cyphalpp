@@ -1,0 +1,171 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+{%- macro as_macro_name(T) -%}
+{{T.full_name | ln.c.macrofy}}{%- if T| attr("inner_type") is defined -%}_{{T.version.major}}_{{T.version.minor}}{%- endif-%}
+{%- endmacro -%}
+
+{%- macro generate_binding(T, mt=None, S=None) -%}
+
+DeclarationFunctionsVector init_{{ as_macro_name(T) }}({{ mt }}& m)
+#ifndef {{ as_macro_name(T) }}_IMPL
+;
+#else
+{
+    DBG
+    auto cls = py::class_<{{T | full_reference_name}}>(m, "{{T | short_reference_name}}");
+    return DeclarationFunctionsVector{ [cls=std::move(cls)] () mutable{
+        DBG
+        // +---------------------------------------------------------------------------------------------------------------+
+        // | PORT IDENTIFIERS
+        // +---------------------------------------------------------------------------------------------------------------+
+        cls.def_property_readonly_static("HasFixedPortID", [](py::object /* self */) { return {{T | full_reference_name}}::HasFixedPortID; });
+        {%- if S and S.has_fixed_port_id %}
+        cls.def_property_readonly_static("FixedPortId", [](py::object /* self */) { return {{T | full_reference_name}}::FixedPortId; });
+        {%- elif  T.has_fixed_port_id %}
+        cls.def_property_readonly_static("FixedPortId", [](py::object /* self */) { return {{T | full_reference_name}}::FixedPortId; });
+        {% endif %}
+        cls.def_property_readonly_static("EXTENT_BYTES", [](py::object /* self */) { return {{T | full_reference_name}}::EXTENT_BYTES; });
+        cls.def_property_readonly_static("SERIALIZATION_BUFFER_SIZE_BYTES", [](py::object /* self */) { return {{T | full_reference_name}}::SERIALIZATION_BUFFER_SIZE_BYTES; });
+        {%- for constant in T.constants %}
+        {% if loop.first %}
+
+        // +---------------------------------------------------------------------------------------------------------------+
+        // | CONSTANTS
+        // +---------------------------------------------------------------------------------------------------------------+
+        {% endif -%}
+        cls.def_property_readonly_static("{{ constant.name | id }}", [](py::object /* self */) { return {{T | full_reference_name}}::{{ constant.name | id }}; });
+        {%- endfor -%}
+
+        {%- if T.inner_type is UnionType -%}
+        cls.def(
+            py::init(
+                [](
+                        {%- for field in T.fields_except_padding -%}{%- if not loop.first -%}, {% endif %}
+                        const {{ field.data_type | declaration }}* {{ field | id }}
+                        {%- endfor -%}
+                ){
+                    auto ret = std::make_unique<{{T | full_reference_name}}>();
+                    uint32_t init_cnt__ = 0;
+                    {% for field in T.fields_except_padding -%}
+                    if({{ field | id }}){
+                        ret->set_{{ field | id }}(*{{ field | id }});
+                        ++init_cnt__;
+                    }
+                    {% endfor -%}
+                    if(init_cnt__ > 1){
+                        throw py::value_error("Union cannot hold values of more than one field");
+                    }
+                    return ret;
+                }
+            ),
+            py::kw_only()
+            {%- for field in T.fields_except_padding -%}, 
+            py::arg("{{ field | id }}") = static_cast<{{ field.data_type | declaration }}*>(nullptr)
+            {%- endfor -%});
+        {% for field in T.fields_except_padding -%}
+        cls.def_property(
+            "{{ field | id }}",
+            []({{T | full_reference_name}}& o) -> {{ field.data_type | declaration }}& {
+                auto ret = o.get_{{field |id }}_if();
+                if(ret == nullptr){
+                    throw py::value_error("");
+                }
+                return *ret;
+            },
+            []({{T | full_reference_name}}& o, const {{ field.data_type | declaration }}& v) {
+                o.set_{{field |id }}(v);
+            });
+        {% endfor -%}
+        cls.def("__repr__", 
+            [](const {{T | full_reference_name}} &o) -> std::string {
+                {% for field in T.fields_except_padding -%}
+                if(o.is_{{ field | id }}()){
+                    return "<{{T | full_reference_name}} {{ field | id }}=" + std::string(py::repr(py::cast(o.get_{{ field | id }}()))) + ">";
+                }
+                {% endfor -%}
+                return "<{{T | full_reference_name}} UNKNOWN tag>";
+            });
+
+        {%- else %}
+        cls.def(
+            py::init<
+                {%- for field in T.fields_except_padding -%}{%- if not loop.first -%}, {% endif %}
+                const {{ field.data_type | declaration }}&
+                {%- endfor -%}
+            >()
+            {%- for field in T.fields_except_padding -%}, 
+            py::arg("{{ field | id }}") = {{ field.data_type | declaration }}{ }
+            {%- endfor -%});
+        {%- for field in T.fields_except_padding -%}
+        cls.def_readwrite("{{ field | id }}", &{{T | full_reference_name}}::{{ field | id }});
+        {% endfor -%}
+        cls.def("__repr__", 
+            [](const {{T | full_reference_name}} &o) -> std::string {
+                return "<{{T | full_reference_name}}"\
+                    {% for field in T.fields_except_padding -%}
+                    "{%- if not loop.first -%},{% endif %} {{ field | id }}=" + std::string(py::repr(py::cast(o.{{ field | id }}))) + ""\
+                    {% endfor -%}
+                    ">";
+            });
+        {% endif %}
+        cls.def(py::pickle(
+            [](const {{T | full_reference_name}} &p) { // __getstate__
+                py::buffer b = py::module_::import("builtins").attr("bytearray")({{T | full_reference_name}}::EXTENT_BYTES);
+                py::buffer_info info = b.request();
+                auto ret = p.serialize({
+                    reinterpret_cast<uint8_t*>(info.ptr), 
+                    {{T | full_reference_name}}::EXTENT_BYTES});
+                if(not ret){
+                    throw py::value_error(nunavuterror2pystr(ret.error()));
+                }
+                return py::make_tuple(b);
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 1)
+                    throw std::runtime_error("Invalid state!");
+                py::buffer b = t[0];
+                py::buffer_info info = b.request();
+                verify_buffer_format(info);
+                auto o = std::make_unique<{{T | full_reference_name}}>();
+                auto ret = o->deserialize({
+                    reinterpret_cast<const uint8_t*>(info.ptr),
+                    static_cast<size_t>(info.shape[0])
+                });
+                if(not ret){
+                    throw py::value_error(nunavuterror2pystr(ret.error()));
+                }
+                return o;
+            }
+        ));
+
+        cls.def("serialize", []({{T | full_reference_name}}& o, py::buffer b)-> {{ typename_unsigned_length }} {
+            py::buffer_info info = b.request();
+            verify_buffer_format(info);
+            auto ret = o.serialize({
+                reinterpret_cast<uint8_t*>(info.ptr),
+                static_cast<size_t>(info.shape[0])
+            });
+            if(not ret){
+                throw py::value_error(nunavuterror2pystr(ret.error()));
+            }
+            return ret.value();
+        });
+        cls.def("deserialize", []({{T | full_reference_name}}& o, py::buffer b)-> {{ typename_unsigned_length }} {
+            py::buffer_info info = b.request();
+            verify_buffer_format(info);
+            auto ret = o.deserialize({
+                reinterpret_cast<const uint8_t*>(info.ptr),
+                static_cast<size_t>(info.shape[0])
+            });
+            if(not ret){
+                throw py::value_error(nunavuterror2pystr(ret.error()));
+            }
+            return ret.value();
+        });
+    }
+    };
+}
+#endif
+{%- endmacro -%}

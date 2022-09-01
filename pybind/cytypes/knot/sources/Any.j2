@@ -1,0 +1,21 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+{%- macro as_macro_name(T) -%}
+{{T.full_name | ln.c.macrofy}}{%- if T| attr("inner_type") is defined -%}_{{T.version.major}}_{{T.version.minor}}{%- endif-%}
+{%- endmacro -%}
+
+#define {{ as_macro_name(T) }}_IMPL
+{% if T| attr("inner_type") is defined -%}
+{% if T.inner_type is ServiceType -%}
+#define {{ as_macro_name(T.request_type) }}_IMPL
+#define {{ as_macro_name(T.response_type) }}_IMPL
+#include "{{T | short_reference_name}}_{{T.version.major}}_{{T.version.minor}}.py.hpp"
+{% else -%}
+#include "{{ T| short_reference_name }}.py.hpp"
+{%- endif %}
+
+{% else -%}
+#include "_namespace_.py.hpp"
+{% endif -%}

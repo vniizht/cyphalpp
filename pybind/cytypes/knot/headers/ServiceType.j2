@@ -1,0 +1,30 @@
+{#-
+ # Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
+ # This software is distributed under the terms of the MIT License.
+-#}
+
+{%- extends "base_.j2" %}
+{%- from "binding.j2" import generate_binding -%}
+{%- block object -%}
+
+{%- set typename = T | full_reference_name | replace(T.short_name | id, "%s::Service" |format(T.short_name | id) ) -%}
+
+{{ generate_binding(T.request_type, "py::class_<%s>" | format(typename), T) }}
+{{ generate_binding(T.response_type, "py::class_<%s>" | format(typename), T) }}
+
+DeclarationFunctionsVector init_{{ as_macro_name(T) }}(py::module_& m)
+#ifndef {{ as_macro_name(T) }}_IMPL
+;
+#else
+{
+    DBG
+    DeclarationFunctionsVector ret;
+    auto cls = py::class_<{{typename}}>(m, "{{T | short_reference_name}}_{{T.version.major}}_{{T.version.minor}}");
+    extend_move(ret, init_{{ as_macro_name(T.request_type) }}(cls));
+    extend_move(ret, init_{{ as_macro_name(T.response_type) }}(cls));
+    cls.attr("Request") = cls.attr("{{T.request_type | short_reference_name}}");
+    cls.attr("Response") = cls.attr("{{T.response_type | short_reference_name}}");
+    return ret;
+}
+#endif
+{%- endblock -%}
