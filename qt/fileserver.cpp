@@ -64,7 +64,7 @@ FileServer::FileServer(CyphalUdp &uc, QObject *parent)
         ret.size = f.size();
         ret.unix_timestamp_of_last_modification = f.lastModified().toSecsSinceEpoch();
         ret.is_file_not_directory = f.isFile();
-        ret.is_link = f.isSymbolicLink();
+        ret.is_link = f.isSymLink();
         ret.is_readable = f.isReadable();
         ret.is_writeable = f.isWritable();
         return ret;

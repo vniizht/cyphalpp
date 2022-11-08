@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         qDebug() << "Heartbeat recieved from " << md.data.node_id << hb;
     });
     using ExecuteCommand = uavcan::node::ExecuteCommand::Service_1_1;
-    cy.subscribeServiceRequest<ExecuteCommand>([](const cyphalpp::TransferMetadata& md, const ExecuteCommand::Request& req)->ExecuteCommand::Response{
+    cy.subscribeServiceRequest<ExecuteCommand>([](const cyphalpp::TransferMetadata& /*md*/, const ExecuteCommand::Request& req)->ExecuteCommand::Response{
         if(req.command == ExecuteCommand::Request::COMMAND_POWER_OFF){
             auto t = new QTimer();
             t->setSingleShot(true);
