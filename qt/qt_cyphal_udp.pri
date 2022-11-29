@@ -6,22 +6,27 @@
 INCLUDEPATH += $$PWD
 
 QT *= core network
+
+isEmpty(CYPHALPP_LINK_COMPILED_PWD){
 HEADERS += \
     $$PWD/qt_cyphal_udp.hpp
-
 SOURCES += \
     $$PWD/qt_cyphal_udp.cpp
 
 
 !equals(CYPHALPP_DISABLE_UTILITY, 1){
+
 HEADERS += \
+    $$PWD/qt_cyphal_registry.hpp \
     $$PWD/fileserver.hpp \
     $$PWD/noderegisters.h \
     $$PWD/nodeshealthmodel.h \
     $$PWD/values_enum.hpp
 
 SOURCES += \
+    $$PWD/qt_cyphal_registry.cpp \
     $$PWD/fileserver.cpp \
     $$PWD/noderegisters.cpp \
     $$PWD/nodeshealthmodel.cpp
+}
 }

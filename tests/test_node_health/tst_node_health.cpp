@@ -16,7 +16,7 @@
 class node_health : public QObject
 {
     Q_OBJECT
-
+    uint32_t lhbase;
 public:
     node_health();
     ~node_health();
@@ -28,19 +28,18 @@ private slots:
 
 node_health::node_health()
 {
-
+    QHostAddress lha(QHostAddress::LocalHost);
+    lhbase = (lha.toIPv4Address() & static_cast<uint32_t>(~0xFFFFFFU)) | (0x200 << 16);
 }
 
 node_health::~node_health()
 {
-
 }
 
 void node_health::test_model()
 {
     using GetInfo = uavcan::node::GetInfo::Service_1_0;
-    QHostAddress lha(QHostAddress::LocalHost);
-    auto lhbase = (lha.toIPv4Address() & static_cast<uint32_t>(~0xFFFFFFU)) | (0x100 << 16);
+    
     cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cy.setAddr(lhbase | 0x1U);
     cyphalpp::HeartbeatPublish<> hb(cy, cyphalpp::qt::qCyphalTimer());

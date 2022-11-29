@@ -62,11 +62,8 @@ nnvg.clean_commands = rm -rf $$DSDL_OUTPUTS
 silent:nnvg.commands = @echo nnvg ${QMAKE_FILE_IN} && $$nnvg.commands
 
 
-
-HEADERS += \
-    $$PWD/qt_dsdl_interface/qt_dsdl_support.hpp
 INCLUDEPATH += \
-    $$OUT_PWD \
-    $$PWD/qt_dsdl_interface
+    $$OUT_PWD 
+
 QMAKE_EXTRA_COMPILERS += nnvg nnvg_phony
 

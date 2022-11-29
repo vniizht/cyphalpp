@@ -1,0 +1,6 @@
+#ifndef CYPHALPP_QT_CYPHAL_REGISTRY_HPP
+#define CYPHALPP_QT_CYPHAL_REGISTRY_HPP
+#include "registry_impl.hpp"
+
+
+#endif // ndef CYPHALPP_QT_CYPHAL_REGISTRY_HPP

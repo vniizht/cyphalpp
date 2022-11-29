@@ -12,7 +12,7 @@
 class test_file_server : public QObject
 {
     Q_OBJECT
-
+    uint32_t lhbase;
 public:
     test_file_server();
     ~test_file_server();
@@ -24,6 +24,8 @@ private slots:
 
 test_file_server::test_file_server()
 {
+    QHostAddress lha(QHostAddress::LocalHost);
+    lhbase = (lha.toIPv4Address() & static_cast<uint32_t>(~0xFFFFFFU)) | (0x100 << 16);
 }
 
 test_file_server::~test_file_server()
@@ -33,8 +35,7 @@ test_file_server::~test_file_server()
 
 void test_file_server::test_file_server_contructs()
 {
-    QHostAddress lha(QHostAddress::LocalHost);
-    auto lhbase = (lha.toIPv4Address() & static_cast<uint32_t>(~0xFFFFFFU)) | (0x100 << 16);
+    
     cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cy.setAddr(lhbase | 0x1U);
     cyphalpp::qt::utils::FileServer fs(cy);

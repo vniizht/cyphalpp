@@ -18,6 +18,9 @@ inline QDebug operator <<(QDebug stream, const {{ typename }}& o){
 {%- endfor -%}
     stream << "Wrong type in union type!";
 {%- else -%}
+{%- if (T.fields_except_padding | length) == 0 %}
+    (void)o;
+{%- endif -%}
 {%- for field in T.fields_except_padding %}
     stream << "{{ field.name }}:";
     stream << o.{{ field | id }};

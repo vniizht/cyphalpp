@@ -98,7 +98,7 @@ FileServer::FileServer(CyphalUdp &uc, QObject *parent)
     });
     qWarning("folder=%s",qPrintable(d->folder.path()));
 
-    QFile* file=new QFile(d->folder.filePath("/test.txt"));
+    QFile* file=new QFile(d->folder.filePath("test.txt"));
     if (!file->exists()) {
         // create the folder, if necessary
         QDir* dir=new QDir(d->folder);

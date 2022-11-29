@@ -248,6 +248,19 @@ public:
         socketFactory(std::move(sFactory)), timerFactory(std::move(tFactory)), loopback_enabled(loopback){
         sender_udp_ = socketFactory();
     }
+    
+    class SubscriptionHandle{
+        friend struct CyphalUdp;
+        Subscription* value_;
+        explicit SubscriptionHandle(Subscription* value): value_(value){}
+    public:
+        SubscriptionHandle():value_(nullptr){}
+        SubscriptionHandle(const SubscriptionHandle& s) = default;
+        SubscriptionHandle(SubscriptionHandle&& s) = default;
+        SubscriptionHandle& operator=(const SubscriptionHandle& s) = default;
+        SubscriptionHandle& operator=(SubscriptionHandle&& s) = default;
+    };
+    friend class CyphalUdp::SubscriptionHandle;
     /**
      * @brief setAddr set base address `addr` for this node
      * @param addr - address of node
@@ -260,6 +273,14 @@ public:
             return -errors::ParsePacket::HeaderWrongProtocolVersion;
         });
     }
+    void unsubscribe(SubscriptionHandle& sub){
+        if(sub.value_ == nullptr){return;}
+        auto r = std::remove_if(subs.begin(), subs.end(), [sub](const std::unique_ptr<Subscription>& o){
+            return o.get() == sub.value_;
+        });
+        subs.erase(r);
+        sub.value_ = nullptr;
+    }
     /**
      * @brief subscribeMessage - subscribes to a broadcast message Message **with** fixed port id
      * @tparam Message - one of Nunavut-generated message classes `uavcan::node::Heartbeat_1_0`, for example
@@ -267,9 +288,9 @@ public:
      * @param f - functor instance to call when Message is recieved.
      */
     template<typename Message, typename F>
-    void subscribeMessage(F&& f){
+    SubscriptionHandle subscribeMessage(F&& f){
         static_assert(Message::HasFixedPortID, "Message should have fixed port id!");
-        subscribeMessage<Message>(
+        return subscribeMessage<Message>(
             std::forward<F>(f),
             []()->uint16_t {return Message::FixedPortId; }
         );
@@ -283,35 +304,35 @@ public:
      * @param f - functor instance to call when Message is recieved.
      */
     template<typename Message, typename PortIdF, typename F>
-    void subscribeMessage(F&& f, PortIdF&& portIdF){
+    SubscriptionHandle subscribeMessage(F&& f, PortIdF&& portIdF){
         static_assert(
             std::is_convertible<decltype(portIdF()), uint16_t>::value,
             "Port ID callback should return uint16_t");
         DataSpecifier ds{
             DataSpecifier::Message, 0, portIdF()
         };
-        subscribe<Message>(
+        return SubscriptionHandle{subscribe<Message>(
             ds, [f = std::forward<F>(f)](
                     Subscription*const, const TransferMetadata& ds, const Message& msg
             ) -> tl::expected<void, Error>{
                 f(ds, msg); return {};
-            });
+            })};
     }
 
     template<typename PortIdF, typename F>
-    void subscribeRawMessage(F&& f, PortIdF&& portIdF){
+    SubscriptionHandle subscribeRawMessage(F&& f, PortIdF&& portIdF){
         static_assert(
             std::is_convertible<decltype(portIdF()), uint16_t>::value,
             "Port ID callback should return uint16_t");
         DataSpecifier ds{
             DataSpecifier::Message, 0, portIdF()
         };
-        subscribeRaw(ds, [f = std::forward<F>(f)](
+        return SubscriptionHandle{subscribeRaw(ds, [f = std::forward<F>(f)](
                 Subscription*const, const TransferMetadata& ds, const uint8_t*const data, size_t size
         ) -> tl::expected<void, Error>{
             f(ds, data, size);
             return {};
-        });
+        })};
     }
 
     /**
@@ -321,9 +342,9 @@ public:
      * @param f - functor instance to call when Service::Request is recieved. It should return Service::Response.
      */
     template<typename Service, typename F>
-    void subscribeServiceRequest(F&& f){
+    SubscriptionHandle subscribeServiceRequest(F&& f){
         static_assert(Service::Request::HasFixedPortID, "Message should have fixed port id!");
-        subscribeServiceRequest<Service>(fixed_port_id<Service::Request::FixedPortId>, std::forward<F>(f));
+        return subscribeServiceRequest<Service>(fixed_port_id<Service::Request::FixedPortId>, std::forward<F>(f));
     }
 
     /**
@@ -335,7 +356,7 @@ public:
      * @param f - functor instance to call when Service::Request is recieved. It should return Service::Response.
      */
     template<typename Service, typename PortIdF, typename F>
-    void subscribeServiceRequest(PortIdF&& portIdF, F&& f){
+    SubscriptionHandle subscribeServiceRequest(PortIdF&& portIdF, F&& f){
         using Request = typename Service::Request;
         using Response = typename Service::Response;
         static_assert(
@@ -344,7 +365,7 @@ public:
         DataSpecifier ds{
             DataSpecifier::ServiceRequest, addr_.node_id(), portIdF()
         };
-        subscribe<Request>(
+        return SubscriptionHandle{subscribe<Request>(
             ds, [this, f = std::forward<F>(f)](
                     Subscription*const sub, const TransferMetadata& tm, const Request& msg
             ) -> tl::expected<void, Error> {
@@ -355,7 +376,7 @@ public:
                         tm.transfer_id, tm.priority
                     }, resp);
                 return {};
-        });
+        })};
     }
 
 
@@ -365,14 +386,14 @@ public:
     };
 
     template<typename PortIdF, typename F>
-    void subscribeRawServiceRequest(PortIdF&& portIdF, F&& f){
+    SubscriptionHandle subscribeRawServiceRequest(PortIdF&& portIdF, F&& f){
         static_assert(
             std::is_convertible<decltype(portIdF()), uint16_t>::value,
             "Port ID callback should return uint16_t");
         DataSpecifier ds{
             DataSpecifier::ServiceRequest, 0, portIdF()
         };
-        subscribeRaw(ds, [this, f = std::forward<F>(f)](
+        return SubscriptionHandle{subscribeRaw(ds, [this, f = std::forward<F>(f)](
                 Subscription*const sub, const TransferMetadata& ds, const uint8_t*const data, size_t size
             ) -> tl::expected<void, Error>{
                 tl::expected<RawResponse, Error> ret = f(ds, data, size);
@@ -385,7 +406,7 @@ public:
                         DataSpecifier{DataSpecifier::ServiceResponce, ds.data.node_id, ds.data.subject_id},
                         ds.transfer_id, ds.priority
                     }, rv.extent, rv.serialization);
-        }   );
+        })};
     }
 
     /**
@@ -450,6 +471,7 @@ public:
         TimerFactory timerFactory;
         TimerImpl::callback_t errorCallback;
         std::vector<Call > calls;
+        SubscriptionHandle sub;
 
         friend struct CyphalUdp;
 
@@ -465,7 +487,7 @@ public:
             ) -> tl::expected<void, Error>{
                 return -errors::ParsePacket::HeaderWrongProtocolVersion;
             });
-            self.subscribe<Response>(
+            sub = SubscriptionHandle{self.subscribe<Response>(
                 DataSpecifier{DataSpecifier::ServiceResponce, self.addr_.node_id(), Response::FixedPortId},
                 [this, f = std::forward<F>(f)](
                         Subscription* const, const TransferMetadata& ds, const Response& msg
@@ -477,7 +499,7 @@ public:
                     }else{
                         return tl::make_unexpected(err.error());
                     }
-                });
+                })};
         }
         bool findAndRemove(uint64_t tid){
             auto removed = std::remove_if(calls.begin(), calls.end(), [&tid](const Call& c){ return c.tid == tid; });
@@ -493,6 +515,9 @@ public:
             }
         }
     public:
+        ~ServiceCaller(){
+            self.unsubscribe(sub);
+        }
         /**
          * @brief call - same as operator()
          */
