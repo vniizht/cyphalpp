@@ -8,7 +8,7 @@
 
 #include <nodeshealthmodel.h>
 #include <qt_cyphal_udp.hpp>
-#include <cyphalnode.hpp>
+#include <cyphalppheartbeatpublish.hpp>
 
 #include <QAbstractItemModelTester>
 #include <uavcan/node/GetInfo_1_0.qt.hpp>
@@ -40,14 +40,12 @@ void node_health::test_model()
 {
     using GetInfo = uavcan::node::GetInfo::Service_1_0;
     
-    cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cy.setAddr(lhbase | 0x1U);
+    cyphalpp::CyphalUdp cy(lhbase | 0x1U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cyphalpp::HeartbeatPublish<> hb(cy, cyphalpp::qt::qCyphalTimer());
     auto model = new cyphalpp::qt::utils::NodesHealthModel(cy, this);
     new QAbstractItemModelTester(model, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
 
-    cyphalpp::CyphalUdp cyNode2(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cyNode2.setAddr(lhbase | 0x2U);
+    cyphalpp::CyphalUdp cyNode2(lhbase | 0x2U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cyphalpp::HeartbeatPublish<> hbN2(cyNode2, cyphalpp::qt::qCyphalTimer());
     cyNode2.subscribeServiceRequest<GetInfo>([](const cyphalpp::TransferMetadata&, const GetInfo::Request&) -> GetInfo::Response{
         GetInfo::Response resp;

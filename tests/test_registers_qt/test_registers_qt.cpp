@@ -6,7 +6,7 @@
 #include <QtTest>
 #include <qt_cyphal_udp.hpp>
 #include <noderegisters.h>
-#include <cyphalnode.hpp>
+#include <cyphalppheartbeatpublish.hpp>
 #include <qt_cyphal_registry.hpp>
 
 
@@ -37,8 +37,7 @@ test_registers_qt::~test_registers_qt()
 void test_registers_qt::test_registers_qt_contructs()
 {
     
-    cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cy.setAddr(lhbase | 0x1U);
+    cyphalpp::CyphalUdp cy(lhbase | 0x1U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     
     using namespace cyphalpp::registry::types;
     cyphalpp::registry::Registry registry(cy, nullptr);
@@ -46,8 +45,7 @@ void test_registers_qt::test_registers_qt_contructs()
     registry["as"] = U32(120);
     
     
-    cyphalpp::CyphalUdp cy2(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cy2.setAddr(lhbase | 0x2U);
+    cyphalpp::CyphalUdp cy2(lhbase | 0x2U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cyphalpp::qt::utils::NodeRegisters reader(cy2, 0x1U);
 
 }

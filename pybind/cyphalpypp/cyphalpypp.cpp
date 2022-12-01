@@ -297,7 +297,7 @@ PYBIND11_MODULE(cyphalpypp, m) {
             .value("WrongSubnet", DataSpecifierConversion::WrongSubnet)
             .value("WrongPort", DataSpecifierConversion::WrongPort)
             .value("PortTooSmall", DataSpecifierConversion::PortTooSmall);
-        
+
         py::enum_<ParsePacket>(e, "ParsePacket")
             .value("MessageTooSmall", ParsePacket::MessageTooSmall)
             .value("RolesMismatch", ParsePacket::RolesMismatch)
@@ -382,10 +382,12 @@ PYBIND11_MODULE(cyphalpypp, m) {
 
 
     auto cy = py::class_<CyphalUdp>(m, "CyphalUdp");
-    cy.def(py::init<>([](){
-            return new CyphalUdp([](){return std::make_unique<PyAsyncioUdpSocket>(); }, [](){return std::make_unique<PyAsyncioTimer>(); } );
+    cy.def(py::init<>([](const MessageAddr& addr){
+            return new CyphalUdp(
+                addr,
+            	[](){return std::make_unique<PyAsyncioUdpSocket>(); },
+            	[](){return std::make_unique<PyAsyncioTimer>(); } );
         }), py::call_guard<py::gil_scoped_acquire>())
-        .def("setAddr", &CyphalUdp::setAddr)
         .def("sendMessage", 
             [](CyphalUdp& self, py::object msg, uint8_t priority){
                 if(not msg.attr("HasFixedPortID").cast<bool>()){

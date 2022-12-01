@@ -24,8 +24,7 @@ using namespace std::chrono_literals;
 template<typename Base, uint16_t node_id>
 struct Node: public virtual Base{
     CyphalUdp node;
-    Node():Base(), node(Base::udpSockets, Base::timers){
-        node.setAddr(Base::base_addr() | node_id);
+    Node():Base(), node(Base::base_addr() | node_id, Base::udpSockets, Base::timers){
     }
     virtual ~Node() override {
     }

@@ -2,9 +2,9 @@
 // Copyright © 2022 JSC "VNIIZHT" or its affiliates. All Rights Reserved.
 // This software is distributed under the terms of the MIT License.
 //
+#ifndef CYPHALPPUDP_HPP
+#define CYPHALPPUDP_HPP
 
-#ifndef UAVCAN_ASYNC_UDP_HPP
-#define UAVCAN_ASYNC_UDP_HPP
 #include <vector>
 #include <memory>
 #include <functional>
@@ -244,9 +244,22 @@ public:
      * @param tFactory - should be a function, creating a new timer
      * @param loopback - specifies, whether this node should receive messages from itself
      */
-    CyphalUdp(SocketFactory sFactory, TimerFactory tFactory, bool loopback = false):
+    CyphalUdp(const MessageAddr& addr, SocketFactory sFactory, TimerFactory tFactory, bool loopback = false):
         socketFactory(std::move(sFactory)), timerFactory(std::move(tFactory)), loopback_enabled(loopback){
         sender_udp_ = socketFactory();
+        addr_ = addr;
+        sender_udp_->prepare(addr_, [](
+                const NetworkAddress&, const NetworkAddress&, const uint8_t*const, size_t
+        ) -> tl::expected<void, Error>{
+            return -errors::ParsePacket::HeaderWrongProtocolVersion;
+        });
+    }
+    MessageAddr baseAddress(){
+        return addr_;
+    }
+    
+    uint16_t nodeId(){
+        return addr_.node_id();
     }
     
     class SubscriptionHandle{
@@ -261,18 +274,7 @@ public:
         SubscriptionHandle& operator=(SubscriptionHandle&& s) = default;
     };
     friend class CyphalUdp::SubscriptionHandle;
-    /**
-     * @brief setAddr set base address `addr` for this node
-     * @param addr - address of node
-     */
-    void setAddr(const MessageAddr& addr){
-        addr_ = addr;
-        sender_udp_->prepare(addr_, [](
-                const NetworkAddress&, const NetworkAddress&, const uint8_t*const, size_t
-        ) -> tl::expected<void, Error>{
-            return -errors::ParsePacket::HeaderWrongProtocolVersion;
-        });
-    }
+
     void unsubscribe(SubscriptionHandle& sub){
         if(sub.value_ == nullptr){return;}
         auto r = std::remove_if(subs.begin(), subs.end(), [sub](const std::unique_ptr<Subscription>& o){
@@ -752,4 +754,4 @@ private:
 
 
 } // namespace cyphalpp
-#endif // ndef UAVCAN_ASYNC_UDP_HPP
+#endif // ndef CYPHALPPUDP_HPP

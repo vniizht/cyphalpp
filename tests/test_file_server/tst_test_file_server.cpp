@@ -35,14 +35,11 @@ test_file_server::~test_file_server()
 
 void test_file_server::test_file_server_contructs()
 {
-    
-    cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cy.setAddr(lhbase | 0x1U);
+    cyphalpp::CyphalUdp cy(lhbase | 0x1U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
     cyphalpp::qt::utils::FileServer fs(cy);
 
 
-    cyphalpp::CyphalUdp cy2(cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
-    cy2.setAddr(lhbase | 0x2U);
+    cyphalpp::CyphalUdp cy2(lhbase | 0x2U, cyphalpp::qt::qCyphalUdpSocket, cyphalpp::qt::qCyphalTimer);
 
 }
 

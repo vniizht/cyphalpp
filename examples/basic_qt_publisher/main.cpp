@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include <cyphalpp.hpp>
-#include <cyphalnode.hpp>
+#include <cyphalppheartbeatpublish.hpp>
 #include <qt_cyphal_udp.hpp>
 #include <QHostAddress>
 #include <QTimer>
@@ -22,8 +22,7 @@ int main(int argc, char *argv[])
     }
 
     // creates a node instance
-    cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket,cyphalpp::qt::qCyphalTimer);
-    cy.setAddr( addr.toIPv4Address() );
+    cyphalpp::CyphalUdp cy( addr.toIPv4Address(), cyphalpp::qt::qCyphalUdpSocket,cyphalpp::qt::qCyphalTimer);
 
     // creates a heartbeat publisher
     cyphalpp::HeartbeatPublish<> hb(cy, cyphalpp::qt::qCyphalTimer());
