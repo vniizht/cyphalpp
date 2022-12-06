@@ -25,9 +25,9 @@ namespace detail {
 template<std::size_t i>
 using type_at = typename Value::VariantType::alternative<i>::type;
 
-template<typename T, typename U>
-T any_scalar(const U& v){
-    return {{v}};
+template<typename T, typename U, typename... Args>
+inline T any_scalar(Args&&... args){
+    return {std::initializer_list<U>{std::forward<Args>(args)...}};
 }
 
 } // namespace detail
@@ -49,19 +49,21 @@ using Real64 = detail::type_at<Value::VariantType::IndexOf::real64>;
 using Real32 = detail::type_at<Value::VariantType::IndexOf::real32>;
 using Real16 = detail::type_at<Value::VariantType::IndexOf::real16>;
 
-
-Bits B(bool v){ return detail::any_scalar<Bits , bool>(v); }
-Integer64 I64(int64_t v){ return detail::any_scalar<Integer64, int64_t>(v); }
-Integer32 I32(int64_t v){ return detail::any_scalar<Integer32, int32_t>(v); }
-Integer16 I16(int64_t v){ return detail::any_scalar<Integer16, int16_t>(v); }
-Integer8 I8(int64_t v){ return detail::any_scalar<Integer8, int8_t>(v); }
-Natural64 U64(uint64_t v){ return detail::any_scalar<Natural64, uint64_t>(v); }
-Natural32 U32(uint32_t v){ return detail::any_scalar<Natural32, uint32_t>(v); }
-Natural16 U16(uint16_t v){ return detail::any_scalar<Natural16, uint16_t>(v); }
-Natural8 U8(uint8_t v){ return detail::any_scalar<Natural8, uint8_t>(v); }
-Real64 F64(double v){ return detail::any_scalar<Real64, double>(v); }
-Real32 F32(float v){ return detail::any_scalar<Real32, float>(v); }
-Real16 F16(float v){ return detail::any_scalar<Real16, float>(v); }
+template<size_t Nc>
+inline Name N(const char (& name)[Nc]){ 
+    return {{static_cast<const char*>(name), static_cast<const char*>(name) + Nc -1}}; }
+inline Bits B(bool v){ return detail::any_scalar<Bits , bool>(v); }
+inline Integer64 I64(int64_t v){ return detail::any_scalar<Integer64, int64_t>(v); }
+inline Integer32 I32(int32_t v){ return detail::any_scalar<Integer32, int32_t>(v); }
+inline Integer16 I16(int16_t v){ return detail::any_scalar<Integer16, int16_t>(v); }
+inline Integer8 I8(int8_t v){ return detail::any_scalar<Integer8, int8_t>(v); }
+inline Natural64 U64(uint64_t v){ return detail::any_scalar<Natural64, uint64_t>(v); }
+inline Natural32 U32(uint32_t v){ return detail::any_scalar<Natural32, uint32_t>(v); }
+inline Natural16 U16(uint16_t v){ return detail::any_scalar<Natural16, uint16_t>(v); }
+inline Natural8 U8(uint8_t v){ return detail::any_scalar<Natural8, uint8_t>(v); }
+inline Real64 F64(double v){ return detail::any_scalar<Real64, double>(v); }
+inline Real32 F32(float v){ return detail::any_scalar<Real32, float>(v); }
+inline Real16 F16(float v){ return detail::any_scalar<Real16, float>(v); }
 
 } // namespace types
 
@@ -70,11 +72,38 @@ Real16 F16(float v){ return detail::any_scalar<Real16, float>(v); }
  * This is an abstract registry interface. You need to implement it for your environment.
  */
 struct RegistryImpl{
+    /**
+     * @brief getName implements uavcan.register.List.1.0 commands
+     * @param i index
+     * @return register name as in uavcan.register.List.1.0
+     */
     virtual List::Response getName(uint16_t i) = 0;
+    /**
+     * @brief get gets a value by name with metainformation
+     * @param n - name to get
+     * @return 
+     */
     virtual Access::Response get(const Name& n) const = 0;
+    /**
+     * @brief set sets a new value for a field
+     * @param n name of a value to set
+     * @param v value to set
+     * @return 
+     */
     virtual Access::Response set(const Name& n, const Value& v) = 0;
-    virtual uint16_t size() = 0;
+    /**
+     * @brief size
+     * @return number of values in registry
+     */
+    virtual uint16_t size() const = 0;
     virtual void setAutosave(bool autosave) = 0;
+    /**
+     * @brief load should load values from persistent store
+     */
+    virtual void load() = 0;
+    /**
+     * @brief save should save values to persistent store
+     */
     virtual void save() = 0;
     virtual ~RegistryImpl()=default;
 };
@@ -85,9 +114,17 @@ class Registry {
     cyphalpp::CyphalUdp::SubscriptionHandle access_;
     cyphalpp::CyphalUdp::SubscriptionHandle list_;
 public:
+    struct RegisterType {
+        Name name;
+        Access::Response value;
+    };
+
     Registry(cyphalpp::CyphalUdp& uc, std::unique_ptr<RegistryImpl> impl)
             :uc_(uc), impl_(std::move(impl))
     {
+        if(impl_){
+            impl_->load();
+        }
         access_ = uc_.subscribeServiceRequest<Access>(
         [this](const cyphalpp::TransferMetadata&, const Access::Request& req) -> Access::Response{
             auto r = impl_->get(req.name);
@@ -99,7 +136,7 @@ public:
         );
         list_ = uc_.subscribeServiceRequest<List>(
         [this](const cyphalpp::TransferMetadata&, const List::Request& req) -> List::Response{
-            return impl_->getName(req.index);   
+            return impl_->getName(req.index);
         }
         );
     }
@@ -116,72 +153,23 @@ public:
         bool mutable_;
         bool persistent_;
     public:
-        Register& operator=(const types::Empty& v){ 
-            if(mutable_){ val_.set_empty(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::String& v){ 
-            if(mutable_){ val_.set_string(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Bytes& v){ 
-            if(mutable_){ val_.set_unstructured(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Bits& v){ 
-            if(mutable_){ val_.set_bit(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Integer64& v){ 
-            if(mutable_){ val_.set_integer64(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Integer32& v){ 
-            if(mutable_){ val_.set_integer32(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Integer16& v){ 
-            if(mutable_){ val_.set_integer16(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Integer8& v){ 
-            if(mutable_){ val_.set_integer8(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Natural64& v){ 
-            if(mutable_){ val_.set_natural64(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Natural32& v){ 
-            if(mutable_){ val_.set_natural32(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Natural16& v){ 
-            if(mutable_){ val_.set_natural16(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Natural8& v){ 
-            if(mutable_){ val_.set_natural8(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Real64& v){ 
-            if(mutable_){ val_.set_real64(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Real32& v){ 
-            if(mutable_){ val_.set_real32(v); set(); }
-            return *this; 
-        }
-        Register& operator=(const types::Real16& v){ 
-            if(mutable_){ val_.set_real16(v); set(); }
-            return *this; 
-        }
-        void get(){
+        template<typename T>
+        Register& operator=(const T& v);
+        
+        void update(){
             auto ret = registry_->impl_->get(name_);
             val_ = ret.value;
             mutable_ = ret._mutable;
             persistent_ = ret.persistent;
         }
+        
+        Value& value() & { return val_; }
+        const Value& value() const &{ return val_; }
+        Value value() && { return val_; }
+        const Value value() const &&{ return val_; }
+        
+        template<typename T> T* as();
+        template<typename T> const T* as() const;
     private:
         Register(Registry* reg, const Name& n)
             :registry_(reg)
@@ -190,7 +178,7 @@ public:
             , mutable_{false}
             , persistent_{false}
         {
-            get();
+            update();
         }
         void set(){
             auto ret = registry_->impl_->set(name_, val_);
@@ -198,7 +186,21 @@ public:
             mutable_ = ret._mutable;
             persistent_ = ret.persistent;
         }
+        bool canEdit() const{
+            return mutable_ or val_.is_empty();
+        }
+        
     };
+    template<typename T>
+    Register setDefault(const Name& name, T&& defaultValue){
+        auto r = (*this)[name];
+        if(r.val_.is_empty()){
+            r.mutable_ = true;
+            r.persistent_ = true;
+            r = defaultValue;
+        }
+        return r;
+    }
     Register operator[](const char* const v){
         Name n{{v, v + strnlen(v, 255)}};
         return (*this)[n];
@@ -207,7 +209,244 @@ public:
     Register operator[](const Name& n){
         return {this, n};
     }
+    template<size_t N>
+    Register operator[](const char (& name)[N]){ 
+        return (*this)[types::N(name)]; 
+    }
+    void save(){
+        impl_->save();
+    }
 };
+
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Empty& v){ 
+    if(canEdit()){ val_.set_empty(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::String& v){ 
+    if(canEdit()){ val_.set_string(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Bytes& v){ 
+    if(canEdit()){ val_.set_unstructured(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Bits& v){ 
+    if(canEdit()){ val_.set_bit(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Integer64& v){ 
+    if(canEdit()){ val_.set_integer64(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Integer32& v){ 
+    if(canEdit()){ val_.set_integer32(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Integer16& v){ 
+    if(canEdit()){ val_.set_integer16(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Integer8& v){ 
+    if(canEdit()){ val_.set_integer8(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Natural64& v){ 
+    if(canEdit()){ val_.set_natural64(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Natural32& v){ 
+    if(canEdit()){ val_.set_natural32(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Natural16& v){ 
+    if(canEdit()){ val_.set_natural16(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Natural8& v){ 
+    if(canEdit()){ val_.set_natural8(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Real64& v){ 
+    if(canEdit()){ val_.set_real64(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Real32& v){ 
+    if(canEdit()){ val_.set_real32(v); set(); }
+    return *this; 
+}
+template<>
+inline Registry::Register& Registry::Register::operator=(const types::Real16& v){ 
+    if(canEdit()){ val_.set_real16(v); set(); }
+    return *this; 
+}
+
+template<>
+inline types::String* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_string())){ return nullptr; }
+    return val_.get_string_if();
+}
+
+template<>
+inline types::Bytes* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_unstructured())){ return nullptr; }
+    return val_.get_unstructured_if();
+}
+
+template<>
+inline types::Bits* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_bit())){ return nullptr; }
+    return val_.get_bit_if();
+}
+
+template<>
+inline types::Integer64* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_integer64())){ return nullptr; }
+    return val_.get_integer64_if();
+}
+
+template<>
+inline types::Integer32* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_integer32())){ return nullptr; }
+    return val_.get_integer32_if();
+}
+
+template<>
+inline types::Integer16* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_integer16())){ return nullptr; }
+    return val_.get_integer16_if();
+}
+
+template<>
+inline types::Integer8* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_integer8())){ return nullptr; }
+    return val_.get_integer8_if();
+}
+
+template<>
+inline types::Natural64* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_natural64())){ return nullptr; }
+    return val_.get_natural64_if();
+}
+
+template<>
+inline types::Natural32* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_natural32())){ return nullptr; }
+    return val_.get_natural32_if();
+}
+
+template<>
+inline types::Natural16* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_natural16())){ return nullptr; }
+    return val_.get_natural16_if();
+}
+
+template<>
+inline types::Natural8* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_natural8())){ return nullptr; }
+    return val_.get_natural8_if();
+}
+
+template<>
+inline types::Real64* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_real64())){ return nullptr; }
+    return val_.get_real64_if();
+}
+
+template<>
+inline types::Real32* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_real32())){ return nullptr; }
+    return val_.get_real32_if();
+}
+
+template<>
+inline types::Real16* Registry::Register::as(){ 
+    if(not (canEdit() and val_.is_real16())){ return nullptr; }
+    return val_.get_real16_if();
+}
+template<>
+inline const types::String* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_string())){ return nullptr; }
+    return val_.get_string_if();
+}
+template<>
+inline const types::Bytes* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_unstructured())){ return nullptr; }
+    return val_.get_unstructured_if();
+}
+template<>
+inline const types::Bits* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_bit())){ return nullptr; }
+    return val_.get_bit_if();
+}
+template<>
+inline const types::Integer64* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_integer64())){ return nullptr; }
+    return val_.get_integer64_if();
+}
+template<>
+inline const types::Integer32* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_integer32())){ return nullptr; }
+    return val_.get_integer32_if();
+}
+template<>
+inline const types::Integer16* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_integer16())){ return nullptr; }
+    return val_.get_integer16_if();
+}
+template<>
+inline const types::Integer8* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_integer8())){ return nullptr; }
+    return val_.get_integer8_if();
+}
+template<>
+inline const types::Natural64* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_natural64())){ return nullptr; }
+    return val_.get_natural64_if();
+}
+template<>
+inline const types::Natural32* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_natural32())){ return nullptr; }
+    return val_.get_natural32_if();
+}
+template<>
+inline const types::Natural16* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_natural16())){ return nullptr; }
+    return val_.get_natural16_if();
+}
+template<>
+inline const types::Natural8* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_natural8())){ return nullptr; }
+    return val_.get_natural8_if();
+}
+template<>
+inline const types::Real64* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_real64())){ return nullptr; }
+    return val_.get_real64_if();
+}
+template<>
+inline const types::Real32* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_real32())){ return nullptr; }
+    return val_.get_real32_if();
+}
+template<>
+inline const types::Real16* Registry::Register::as() const { 
+    if(not (canEdit() and val_.is_real16())){ return nullptr; }
+    return val_.get_real16_if();
+}
 
 } // namespace registry
 } // namespace cyphalpp

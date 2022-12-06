@@ -17,6 +17,7 @@ SOURCES += \
 !equals(CYPHALPP_DISABLE_UTILITY, 1){
 
 HEADERS += \
+    $$PWD/qt_cyphal_register_values_as_qvariant.hpp \
     $$PWD/qt_cyphal_registry.hpp \
     $$PWD/fileserver.hpp \
     $$PWD/noderegisters.h \
@@ -24,6 +25,7 @@ HEADERS += \
     $$PWD/values_enum.hpp
 
 SOURCES += \
+    $$PWD/qt_cyphal_register_values_as_qvariant.cpp \
     $$PWD/qt_cyphal_registry.cpp \
     $$PWD/fileserver.cpp \
     $$PWD/noderegisters.cpp \
