@@ -1,0 +1,5 @@
+generated
+.b.*
+compile_commands.json
+registry-editor*
+.vscode
