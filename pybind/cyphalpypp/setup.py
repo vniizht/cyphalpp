@@ -1,11 +1,26 @@
 import sys
 
 from pybind11 import get_cmake_dir
+from typing import Any
 # Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 from pathlib import Path
+from subprocess import check_call
 
+class CyphalpyppExtension(Pybind11Extension):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+       check_call([
+          "nnvg",
+          "--experimental-languages",
+          "--target-language", "cpp",
+          "--pp-max-emptylines=1",
+          "--pp-trim-trailing-whitespace",
+          "--target-endianness=any",
+          "--outdir", ".",
+          "../../cyphal_udp"
+       ])
+       super().__init__(*args, **kwargs)
 
 __version__ = "1.0.0"
 
@@ -19,12 +34,12 @@ __version__ = "1.0.0"
 #   reproducible builds (https://github.com/pybind/python_example/pull/53)
 
 ext_modules = [
-    Pybind11Extension("cyphalpypp",
+    CyphalpyppExtension("cyphalpypp",
         ["cyphalpypp.cpp"],
         # Example: passing in the version to the compiled code
         define_macrsos = [('VERSION_INFO', __version__)],
         cxx_std=17,
-        include_dirs =["../../include/", "../../vendored", "../cytypes"]
+        include_dirs =["../../include/", "../../vendored", "../cytypes", "."]
         ),
 ]
 

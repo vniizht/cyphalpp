@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include <cyphalpp.hpp>
-#include <cyphalnode.hpp>
+#include <cyphalppheartbeatpublish.hpp>
 #include <qt_cyphal_udp.hpp>
 #include <QHostAddress>
 #include <QTimer>
@@ -22,8 +22,7 @@ int main(int argc, char *argv[])
     }
 
     // creates a node instance
-    cyphalpp::CyphalUdp cy(cyphalpp::qt::qCyphalUdpSocket,cyphalpp::qt::qCyphalTimer);
-    cy.setAddr( addr.toIPv4Address() );
+    cyphalpp::CyphalUdp cy( addr.toIPv4Address(), cyphalpp::qt::qCyphalUdpSocket,cyphalpp::qt::qCyphalTimer);
 
     // creates a heartbeat publisher
     cyphalpp::HeartbeatPublish<> hb(cy, cyphalpp::qt::qCyphalTimer());
@@ -32,7 +31,7 @@ int main(int argc, char *argv[])
         qDebug() << "Heartbeat recieved from " << md.data.node_id << hb;
     });
     using ExecuteCommand = uavcan::node::ExecuteCommand::Service_1_1;
-    cy.subscribeServiceRequest<ExecuteCommand>([](const cyphalpp::TransferMetadata& md, const ExecuteCommand::Request& req)->ExecuteCommand::Response{
+    cy.subscribeServiceRequest<ExecuteCommand>([](const cyphalpp::TransferMetadata& /*md*/, const ExecuteCommand::Request& req)->ExecuteCommand::Response{
         if(req.command == ExecuteCommand::Request::COMMAND_POWER_OFF){
             auto t = new QTimer();
             t->setSingleShot(true);

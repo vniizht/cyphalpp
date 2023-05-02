@@ -22,37 +22,52 @@ for(LD, DSDL_LOOKUP_DIRS){
     NNVG_FLAGS += -I $$LD
 }
 NNVG = $$NNVG_EXE $$NNVG_FLAGS
-nnvg.name = nnvg ${QMAKE_FILE_IN}
-nnvg.input = DSDL_DIRS
-nnvg.output = ${QMAKE_FILE_IN_BASE}.nnvg.done.a
-nnvg.dependency_type = TYPE_UI
-nnvg.depend_command = $$NNVG --list-inputs -O ${QMAKE_FILE_OUT_PATH} ${QMAKE_FILE_IN} | sed 's/\;/\\\\n/g'
-nnvg.commands = $$NNVG -O ${QMAKE_FILE_OUT_PATH} ${QMAKE_FILE_IN}
-qt{
-nnvg.commands = $${nnvg.commands} && $$NNVG -e .qt.hpp --templates $$PWD/qt_dsdl_interface --omit-serialization-support -O ${QMAKE_FILE_OUT_PATH} ${QMAKE_FILE_IN}
-}
-nnvg.commands = $${nnvg.commands} && touch ${QMAKE_FILE_OUT}
-nnvg.CONFIG += target_predeps no_link
-nnvg.clean = ${QMAKE_FILE_OUT}
-nnvg.clean_commands = rm -rf ${QMAKE_FILE_OUT_PATH}/${QMAKE_FILE_IN_BASE}
-silent:nnvg.commands = @echo nnvg ${QMAKE_FILE_IN} && $$nnvg.commands
-
+DSDL_INPUTS = $$system($$NNVG --generate-support only --list-inputs -O $${OUT_PWD} | sed 's/\;/\\\\n/g')
+DSDL_OUTPUTS = $$system($$NNVG --generate-support only --list-outputs -O $${OUT_PWD} | sed 's/\;/\\\\n/g')
 I=0
 for(DSDL_DIR, DSDL_DIRS){
-    DSDL_DIR_OUTPUTS = $$system($$NNVG --list-outputs -O $${OUT_PWD} $${DSDL_DIR} | sed 's/\;/\\\\n/g')
-    for(DSDL_DIR_OUTPUT, DSDL_DIR_OUTPUTS){
-        eval(dsdl_$${I}.target = $$DSDL_DIR_OUTPUT);
-        eval(dsdl_$${I}.depends = $$basename(DSDL_DIR).nnvg.done.a)
-        HEADERS += $$DSDL_DIR_OUTPUT
-        QMAKE_EXTRA_TARGETS += dsdl_$${I}
-        I=$$num_add($$I, 1)
+    DSDL_DIR_INPUTS = $$system($$NNVG --generate-support never --list-inputs -O $${OUT_PWD} $${DSDL_DIR} | sed 's/\;/\\\\n/g')
+    DSDL_DIR_OUTPUTS = $$system($$NNVG --generate-support never --list-outputs -O $${OUT_PWD} $${DSDL_DIR} | sed 's/\;/\\\\n/g')
+    qt{
+    !dsdl_no_qt{
+    DSDL_DIR_OUTPUTS += $$system($$NNVG --generate-support never --list-outputs -O $${OUT_PWD} -e .qt.hpp --templates $$PWD/qt_dsdl_interface --omit-serialization-support $${DSDL_DIR} | sed 's/\;/\\\\n/g')
     }
+    }
+    DSDL_INPUTS += $${DSDL_DIR_INPUTS}
+    DSDL_OUTPUTS += $$DSDL_DIR_OUTPUTS
 }
 
-HEADERS += \
-    $$PWD/qt_dsdl_interface/qt_dsdl_support.hpp
+nnvg_phony.name = nnvg_phony ${QMAKE_FILE_IN}
+nnvg_phony.input = DSDL_OUTPUTS
+nnvg_phony.output = ${QMAKE_FILE_IN}
+nnvg_phony.dependency_type = TYPE_UI
+nnvg_phony.depends = nnvg.done.h
+nnvg_phony.commands = @true
+nnvg_phony.clean_commands = @true
+nnvg_phony.variable_out = HEADERS
+
+nnvg.name = nnvg ${QMAKE_FILE_IN}
+nnvg.input = DSDL_DIRS
+nnvg.output = nnvg.done.h
+nnvg.dependency_type = TYPE_UI
+nnvg.depends = $$DSDL_INPUTS
+nnvg.commands = $$NNVG -O ${QMAKE_FILE_OUT_PATH} --generate-support only &&
+nnvg.commands = $${nnvg.commands} for NNVG__FILE__IN__ in ${QMAKE_FILE_IN}; do
+nnvg.commands = $${nnvg.commands} $$NNVG --generate-support never -O ${QMAKE_FILE_OUT_PATH} \$\$NNVG__FILE__IN__
+qt{
+!dsdl_no_qt{
+nnvg.commands = $${nnvg.commands} && $$NNVG -e .qt.hpp --templates $$PWD/qt_dsdl_interface --omit-serialization-support -O ${QMAKE_FILE_OUT_PATH} \$\$NNVG__FILE__IN__
+}
+}
+nnvg.commands = $${nnvg.commands} && touch nnvg.done.h; done
+nnvg.CONFIG += target_predeps no_link combine
+nnvg.variable_out = HEADERS
+nnvg.clean_commands = rm -rf $$DSDL_OUTPUTS
+silent:nnvg.commands = @echo nnvg ${QMAKE_FILE_IN} && $$nnvg.commands
+
+
 INCLUDEPATH += \
-    $$OUT_PWD \
-    $$PWD/qt_dsdl_interface
-QMAKE_EXTRA_COMPILERS += nnvg
+    $$OUT_PWD 
+
+QMAKE_EXTRA_COMPILERS += nnvg nnvg_phony
 

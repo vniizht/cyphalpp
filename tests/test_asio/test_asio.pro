@@ -4,28 +4,12 @@
 #
 
 TEMPLATE = app
-CONFIG -= qt
-CONFIG -= app_bundle
-CONFIG += console
 
-isEmpty(BOOST_INCLUDE_DIR): BOOST_INCLUDE_DIR=$$(BOOST_INCLUDE_DIR)
-!isEmpty(BOOST_INCLUDE_DIR): INCLUDEPATH *= $${BOOST_INCLUDE_DIR}
+include($$PWD/../asio_test.pri)
 
-isEmpty(BOOST_INCLUDE_DIR): {
-    message("BOOST_INCLUDE_DIR is not set, assuming Boost can be found automatically in your system")
-}
-
-INCLUDEPATH *= $$PWD/../../include/
-INCLUDEPATH *= $$PWD/../../vendored/
-INCLUDEPATH *= $$PWD/../../asio/
-
-HEADERS += \
-    $$PWD/../../include/cyphalpp.hpp \
-    $$PWD/../../asio/asio_cyphal.hpp
+LIBS += -lboost_filesystem
 
 SOURCES += \
     main.cpp
 
 
-include($$PWD/../tests.pri)
-include($$PWD/../../qt/dsdl.pri)

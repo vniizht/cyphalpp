@@ -76,10 +76,23 @@ public:
         );
         return writeDatagram(dg);
     }
+    void rebindUnicast(const cyphalpp::NetworkAddress& addr){
+        close();
+        QTimer::singleShot(1000, [this, addr]{
+            listenUnicast(addr);
+        });
+    }
+    void rebindMulticast(const cyphalpp::NetworkAddress& addr){
+        close();
+        QTimer::singleShot(1000, [this, addr]{
+            listenMulticast(addr);
+        });
+    }
     virtual void listenUnicast(const cyphalpp::NetworkAddress& addr)override{
         QHostAddress a(static_cast<uint32_t>(addr.addr));
         if(not bind(a, addr.port, QUdpSocket::ShareAddress)){
             qWarning() << errorString();
+            rebindUnicast(addr);
         }
     }
     virtual void listenMulticast(const cyphalpp::NetworkAddress& addr)override{
@@ -87,10 +100,12 @@ public:
         auto bi = findBindInterface(a);
         if(not bi.isValid()){
             qWarning() << "Failed to listen on multicast address" << a << " - interface with subnet " << addr.addr.subnet_id() << " not found!";
+            rebindMulticast(addr);
             return;
         }
         if(not bind(a, addr.port, QUdpSocket::ShareAddress)){
             qWarning() << errorString();
+            rebindMulticast(addr);
             return;
         }
         joinMulticastGroup(a, bi);
@@ -127,12 +142,6 @@ std::unique_ptr<TimerImpl> qCyphalTimer(){ return std::make_unique<QCyphalTimer>
 
 } // namespace qt
 
-QDebug operator<<(QDebug ret, const Error &e){
-    ret << "E{";
-    mpark::visit([&ret](auto v){ret<< v;}, e);
-    ret << "}";
-    return ret;
-}
 
 QDebug operator<<(QDebug ret, const errors::DataSpecifierConversion &c) {
     ret << "DSC::";
@@ -183,6 +192,17 @@ QDebug operator<<(QDebug ret, const errors::ServiceCall &c) {
     case errors::ServiceCall::TransferIdOutOfSync: ret << "TransferIdOutOfSync"; break;
     default: break;
     }
+    return ret;
+}
+
+QDebug operator<<(QDebug ret, const Error &e){
+    ret << "E{";
+    mpark::visit([&ret](auto v)
+    {
+        ret<< v;
+    },
+    e);
+    ret << "}";
     return ret;
 }
 

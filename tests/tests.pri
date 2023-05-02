@@ -3,29 +3,21 @@
 # This software is distributed under the terms of the MIT License.
 #
 
-equals(TEMPLATE,subdirs){
-    isEmpty(PRDT_PATH){
-        PRDT_PATH=$$OUT_PWD/prdt
-    }
-    exists($$PRDT_PATH/README.md){
-    }else{
-        isEmpty(PRDT_URL){
-            PRDT_URL="https://github.com/OpenCyphal/public_regulated_data_types.git"
-        }
-        system(git clone $$PRDT_URL $$PRDT_PATH){
-        }else{
-            error("Failed fetching public regulated data types from $$PRDT_URL to $$PRDT_PATH")
-        }
-    }
+equals(TEMPLATE, lib){
+
 }else{
-    isEmpty(PRDT_PATH){
-        PRDT_PATH=$$OUT_PWD/../prdt
-    }
-    DSDL_DIRS += $$PRDT_PATH/uavcan
+    CYPHALPP_LINK_COMPILED_PWD = $$PWD/prdt
+    
     qt{
-        include($$PWD/../qt/cyphalpp.pri){
-        }else{
-            error("Failed to include qt/cyphalpp.pri !")
-        }
+        CYPHALPP_LINK_COMPILED_LIB = prdt
+        QT += testlib
+        QT -= gui
+        CONFIG += console warn_on depend_includepath testcase
+        CONFIG -= app_bundle
+    }
+    
+    include($$PWD/../qt/cyphalpp.pri){
+    }else{
+        error("Failed to include qt/cyphalpp.pri !")
     }
 }
