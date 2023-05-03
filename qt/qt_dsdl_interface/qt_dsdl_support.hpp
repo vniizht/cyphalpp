@@ -19,4 +19,5 @@ QDebug operator <<(QDebug stream, const std::array<T,N>& arr){
     return stream;
 }
 
+
 #endif // QT_DSDL_SUPPORT_HPP
